@@ -14,6 +14,13 @@ Changes from the generated output, in each app:
 - `@glint/tsserver-plugin` is removed. It only loads into a TypeScript 5/6 tsserver; with TS 7 the
   content mapper covers type-checking instead.
 
+Each app exercises the surfaces the mapper has to handle: a class-based component with a signature,
+tracked state, and yielded blocks (`counter.gts`), a template-only component (`greeting.gts`), an
+untyped `.gjs` component with a JSDoc signature (`avatar.gjs`), a custom modifier
+(`modifiers/autofocus.ts`) and plain functions used as helpers, a `.ts` barrel importing `.gts` and
+`.gjs` modules (`components/index.ts`), the Ember 7.1 built-in keywords (`on`, `gt`, `each`),
+`trackedArray` from `@ember/reactive/collections` (nvp-app), and a rendering test written in `.gts`.
+
 ## Type-check from the CLI
 
 ```sh
@@ -36,3 +43,42 @@ the template position. Set `TS_CONTENT_MAPPER_DEBUG=1` to log the JSON-RPC traff
    that registers the mapper's extensions with the TypeScript extension, which does not exist yet.
 4. Set the TypeScript log level to Trace to see the mapper's JSON-RPC traffic and stderr in the
    "TypeScript 7" output channel.
+
+## Debug in Neovim
+
+Classic setups (`ts_ls` + `@glint/tsserver-plugin`, or `glint-language-server`) only work against a
+TypeScript 5/6 tsserver, so in these apps they paint syntax errors over every `<template>` tag.
+Detach them for content-mapper projects and use nvim-lspconfig's `tsc` (TypeScript 7's native LSP)
+instead:
+
+```lua
+vim.lsp.config('tsc', {
+  filetypes = {
+    'javascript',
+    'typescript',
+    'javascript.glimmer',
+    'typescript.glimmer',
+  },
+  init_options = {
+    -- Content mappers spawn processes declared by the project, so TypeScript
+    -- requires this explicit opt-in (VS Code sends it for trusted workspaces).
+    runExternalCode = true,
+  },
+  get_language_id = function(_, filetype)
+    if filetype == 'typescript.glimmer' then
+      return 'typescript'
+    end
+
+    if filetype == 'javascript.glimmer' then
+      return 'javascript'
+    end
+
+    return filetype
+  end,
+})
+vim.lsp.enable('tsc')
+```
+
+[ember.nvim](https://github.com/NullVoxPopuli/ember.nvim) does all of this automatically for
+projects whose tsconfig declares `contentMappers` (see
+[ember.nvim#4](https://github.com/NullVoxPopuli/ember.nvim/pull/4)).

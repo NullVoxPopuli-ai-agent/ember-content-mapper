@@ -98,5 +98,8 @@
   },
   "ember": {
     "edition": "octane"
+  },
+  "dependencies": {
+    "ember-modifier": "^4.3.0"
   }
 }
