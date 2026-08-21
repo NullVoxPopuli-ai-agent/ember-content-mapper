@@ -20,11 +20,12 @@
     }
   },
   "scripts": {
-    "test": "node --test",
+    "test": "node --test 'test/*.js'",
     "test:typecheck": "node node_modules/typescript-7/bin/tsc -p type-tests --runExternalCode",
     "lint:types": "tsc",
     "lint:prettier": "prettier --check .",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "test:examples": "pnpm --filter nvp-app lint:types && pnpm --filter cli-app lint:types"
   },
   "dependencies": {
     "@glint/ember-tsc": "~1.10.0",

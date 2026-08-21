@@ -76,6 +76,12 @@ directives:
 - `{{! @glint-ignore }}` suppresses diagnostics in the next content's transformed output.
 - `{{! @glint-nocheck }}` suppresses diagnostics for the whole template.
 
+## Example apps
+
+[`examples/`](./examples) contains two full Ember apps, one generated with `pnpm dlx ember.nvp`
+and one with `pnpm dlx ember-cli@latest new`, both updated to TypeScript 7 and this mapper. See
+[examples/README.md](./examples/README.md) for CLI and editor debugging instructions.
+
 ## Debugging
 
 Set `TS_CONTENT_MAPPER_DEBUG=1` to log the JSON-RPC traffic between `tsc` and the mapper.

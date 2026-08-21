@@ -7,3 +7,5 @@ minimumReleaseAgeExclude:
   - '@typescript/typescript-win32-arm64@7.1.0-dev.20260821.1'
   - '@typescript/typescript-win32-x64@7.1.0-dev.20260821.1'
   - typescript@7.1.0-dev.20260821.1
+packages:
+  - examples/*
