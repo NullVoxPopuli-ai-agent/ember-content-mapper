@@ -4,6 +4,9 @@ import { shout } from '../helpers/format.ts';
 
 export interface GreetingSignature {
   Args: {
+    /**
+     * Docs here
+     */
     name: string;
   };
   Blocks: {

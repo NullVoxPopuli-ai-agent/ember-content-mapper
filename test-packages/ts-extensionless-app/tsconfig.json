@@ -1,0 +1,32 @@
+{
+  "compilerOptions": {
+    "target": "esnext",
+    "module": "preserve",
+    "moduleResolution": "bundler",
+    "noEmit": true,
+    "strict": true,
+    "experimentalDecorators": true,
+    "types": [
+      "ember-source/types",
+      "@glint/ember-tsc/types"
+    ],
+    "skipLibCheck": true
+  },
+  "exclude": [
+    "__tests__",
+    "vitest.config.ts",
+    "node_modules"
+  ],
+  "contentMappers": [
+    {
+      "package": "ember-content-mapper",
+      "extensions": [
+        ".gts",
+        ".gjs"
+      ]
+    }
+  ],
+  "include": [
+    "src"
+  ]
+}

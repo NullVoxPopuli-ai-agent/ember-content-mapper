@@ -9,3 +9,4 @@ minimumReleaseAgeExclude:
   - typescript@7.1.0-dev.20260821.1
 packages:
   - examples/*
+  - test-packages/*

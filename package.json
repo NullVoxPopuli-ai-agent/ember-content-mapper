@@ -21,7 +21,6 @@
   },
   "scripts": {
     "test": "node --test 'test/*.js'",
-    "test:typecheck": "node node_modules/typescript-7/bin/tsc -p type-tests --runExternalCode",
     "lint:types": "tsc",
     "lint:prettier": "prettier --check .",
     "format": "prettier --write .",

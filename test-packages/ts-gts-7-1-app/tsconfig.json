@@ -1,0 +1,22 @@
+{
+  "extends": "@tsconfig/ember",
+  "compilerOptions": {
+    "noEmit": true,
+    "types": [
+      "ember-source/types",
+      "@glint/ember-tsc/types"
+    ]
+  },
+  "contentMappers": [
+    {
+      "package": "ember-content-mapper",
+      "extensions": [
+        ".gts",
+        ".gjs"
+      ]
+    }
+  ],
+  "exclude": [
+    "src/globals/array-keyword-preserve-literals.test.gts"
+  ]
+}

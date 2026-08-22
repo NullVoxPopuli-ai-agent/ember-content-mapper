@@ -29,9 +29,30 @@ function typecheck(project) {
   }
 }
 
-test('type-tests typecheck cleanly', () => {
-  assert.equal(typecheck('type-tests'), '');
-});
+// Direct copies of typed-ember/glint's test-packages (at v1.10.0). Their
+// sources are byte-identical to upstream; only package.json and tsconfig.json
+// are adapted. The expected output of each package documents where this
+// mapper's behavior deviates from Glint's own type-checking; an empty
+// expectation means the package type-checks clean. See
+// test-packages/README.md for why each non-empty expectation exists.
+const testPackages = [
+  'ts-template-imports-app',
+  'ts-gts-7-1-app',
+  'ts-special-forms-app',
+  'ts-special-forms-pre-7-1-app',
+  'ts-extensionless-app',
+];
+
+for (const name of testPackages) {
+  test(`test-packages/${name} matches its expected output`, () => {
+    const expected = readFileSync(
+      new URL(`../test-packages/expected/${name}.txt`, import.meta.url),
+      'utf8',
+    );
+
+    assert.equal(typecheck(`test-packages/${name}`), expected);
+  });
+}
 
 for (const project of ['semantic', 'parse-error']) {
   test(`diagnostics-tests/${project} reports mapped diagnostics`, () => {
