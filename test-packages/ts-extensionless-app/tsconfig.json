@@ -12,11 +12,6 @@
     ],
     "skipLibCheck": true
   },
-  "exclude": [
-    "__tests__",
-    "vitest.config.ts",
-    "node_modules"
-  ],
   "contentMappers": [
     {
       "package": "ember-content-mapper",

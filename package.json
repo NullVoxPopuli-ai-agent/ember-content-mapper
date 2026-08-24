@@ -24,7 +24,9 @@
     "lint:types": "tsc",
     "lint:prettier": "prettier --check .",
     "format": "prettier --write .",
-    "test:examples": "pnpm --filter nvp-app lint:types && pnpm --filter cli-app lint:types"
+    "test:examples": "pnpm --filter nvp-app lint:types && pnpm --filter cli-app lint:types",
+    "test:unit": "node --test test/fixtures.js test/initialize.js test/project.js",
+    "test:typecheck": "node --test test/typecheck.js"
   },
   "dependencies": {
     "@glint/ember-tsc": "~1.10.0",

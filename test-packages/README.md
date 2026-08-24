@@ -16,9 +16,9 @@ the test fails until the snapshot is re-recorded.
 Not copied: `package-test-core`, `package-test-template`, and `test-utils` (Glint's own vitest
 harnesses), `ts-plugin-test-app` and `ts-template-imports-app-no-config` (tsserver-plugin and
 inferred-project editor scenarios), `js-ember-app` (a single empty fixture for Glint's
-default-config tests), and `v2-ts-ember-addon` (a build-pipeline test). In
-`ts-extensionless-app`, only `src` is included in the tsconfig; its `__tests__` and `*-fixture`
-directories drive Glint's own CLI harness.
+default-config tests), and `v2-ts-ember-addon` (a build-pipeline test). The `__tests__` and
+`*-fixture` directories of `ts-extensionless-app` are also not copied: they drive Glint's own
+CLI harness (watch mode, build mode, tsc source patches), which does not apply to TypeScript 7.
 
 ## Known deviations
 
