@@ -15,6 +15,13 @@ text and its span mappings. Diagnostics point at the original template source.
 - The `--runExternalCode` flag on each `tsc` command.
 - `@glint/ember-tsc`. It contains the template DSL types that the transformed output references.
 
+### Why does the mapper depend on TypeScript 5?
+
+TypeScript 7 type-checks your project. The mapper also needs the TypeScript JavaScript API:
+Glint's transform parses the script parts of each `.gts` file with it. The TypeScript 7 package
+is the native compiler and has no JavaScript API, so the mapper carries its own TypeScript 5 as
+an internal parser. That copy never type-checks your code.
+
 ## Installation
 
 ```sh
