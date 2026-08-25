@@ -46,6 +46,8 @@ What works today:
    files then use the TypeScript 7 server.
 2. Disable the Glint extension for this workspace (Extensions view, "Disable (Workspace)"). Its
    language server needs a TypeScript 5/6 workspace library, and these apps pin TypeScript 7.
+   [typed-ember/glint#1228](https://github.com/typed-ember/glint/pull/1228) makes the extension
+   stand down on TypeScript 7 workspaces by itself.
 
 When an extension build newer than 2026-08-19 ships, two more steps apply:
 
