@@ -1,0 +1,2 @@
+test-packages/ts-extensionless-app/src/Greeting.gts(2,18): error TS2307: Cannot find module './Bang' or its corresponding type declarations.
+test-packages/ts-extensionless-app/src/index.gts(1,22): error TS2307: Cannot find module './Greeting' or its corresponding type declarations.

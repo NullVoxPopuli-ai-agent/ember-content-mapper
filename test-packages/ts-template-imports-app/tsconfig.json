@@ -1,0 +1,27 @@
+{
+  "extends": "@tsconfig/ember",
+  "compilerOptions": {
+    "noEmit": true,
+    "types": [
+      "ember-source/types"
+    ]
+  },
+  "include": [
+    "src",
+    "types"
+  ],
+  "contentMappers": [
+    {
+      "package": "ember-content-mapper",
+      "extensions": [
+        ".gts",
+        ".gjs"
+      ],
+      "options": {
+        "additionalGlobals": [
+          "t"
+        ]
+      }
+    }
+  ]
+}

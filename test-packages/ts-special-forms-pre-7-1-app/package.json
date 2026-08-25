@@ -1,0 +1,22 @@
+{
+  "name": "ts-special-forms-pre-7-1-app",
+  "version": "0.0.0",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "test:typecheck": "tsc --runExternalCode"
+  },
+  "devDependencies": {
+    "@glimmer/component": "^2.0.0",
+    "@glint/ember-tsc": "~1.10.1",
+    "@glint/template": "^1.8.0",
+    "@glint/type-test": "^2.0.1",
+    "@tsconfig/ember": "^3.0.9",
+    "ember-content-mapper": "workspace:*",
+    "ember-source": "^6.2.0",
+    "typescript": "7.1.0-dev.20260821.1"
+  },
+  "volta": {
+    "extends": "../../package.json"
+  }
+}

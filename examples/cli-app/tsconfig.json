@@ -1,0 +1,37 @@
+{
+  "extends": "@ember/app-tsconfig",
+  "include": [
+    "app",
+    "tests",
+    "types"
+  ],
+  "compilerOptions": {
+    "allowJs": true,
+    "paths": {
+      "cli-app/tests/*": [
+        "./tests/*"
+      ],
+      "cli-app/*": [
+        "./app/*"
+      ],
+      "*": [
+        "./types/*"
+      ]
+    },
+    "types": [
+      "ember-source/types",
+      "@embroider/core/virtual",
+      "vite/client",
+      "@glint/ember-tsc/types"
+    ]
+  },
+  "contentMappers": [
+    {
+      "package": "ember-content-mapper",
+      "extensions": [
+        ".gts",
+        ".gjs"
+      ]
+    }
+  ]
+}
