@@ -34,31 +34,42 @@ the template position. Set `TS_CONTENT_MAPPER_DEBUG=1` to log the JSON-RPC traff
 
 ## Debug in VS Code
 
-VS Code cannot type-check `.gts` through the mapper yet. The newest marketplace build of the
+The marketplace build of the
 [TypeScript (Native Preview)](https://marketplace.visualstudio.com/items?itemName=TypeScriptTeam.native-preview)
-extension is `0.20260708.2` (2026-07-08). Content mapper support merged into TypeScript on
-2026-08-19. That extension build does not send the `runExternalCode` opt-in, so the server
-ignores `contentMappers`.
+extension is `0.20260708.2` (2026-07-08) and predates content mapper support (merged
+2026-08-19). Until a newer build ships, build the extension from
+[microsoft/typescript-go](https://github.com/microsoft/typescript-go) main. The client code is
+TypeScript; the native server comes from the published platform package, so no Go toolchain is
+needed:
 
-What works today:
+```sh
+git clone --depth 1 --filter=blob:none --sparse https://github.com/microsoft/typescript-go.git
+cd typescript-go
+git sparse-checkout set _extension
+npm ci
+cd _extension
+npm run bundle:release
+# stage: copy _extension (minus node_modules and tsconfigs) to a clean directory,
+# then unpack the `lib/` of @typescript/typescript-<platform>@<nightly> into <stage>/lib
+npx @vscode/vsce package 0.<date>.99 --no-update-package-json --no-dependencies --target <platform> --allow-unused-files-pattern
+code --install-extension native-preview-*.vsix
+```
 
-1. Install the extension. Set `"typescript.experimental.useTsgo": true`. Plain `.ts` and `.js`
-   files then use the TypeScript 7 server.
+Then:
+
+1. Set `"typescript.experimental.useTsgo": true` and reload. Trust the workspace: the extension
+   sends the `runExternalCode` opt-in (setting `js/ts.contentMappers.enabled`, default true)
+   only for trusted workspaces.
 2. Disable the Glint extension for this workspace (Extensions view, "Disable (Workspace)"). Its
    language server needs a TypeScript 5/6 workspace library, and these apps pin TypeScript 7.
    [typed-ember/glint#1228](https://github.com/typed-ember/glint/pull/1228) makes the extension
    stand down on TypeScript 7 workspaces by itself.
-
-When an extension build newer than 2026-08-19 ships, two more steps apply:
-
-1. Trust the workspace. The extension sends `runExternalCode` only for trusted workspaces.
-2. Open a `.ts` file first so the server discovers the app's `tsconfig.json`. Full `.gts` editor
+3. Open a `.ts` file first so the server discovers the app's `tsconfig.json`. Full `.gts` editor
    features also need an extension that registers the mapper's file extensions with the
-   TypeScript extension, and that does not exist yet.
+   TypeScript extension (`registerContentMappers`), and that does not exist yet.
 
-Until then, use the CLI (`pnpm lint:types`) or Neovim for template diagnostics. Set the
-TypeScript log level to Trace to see the mapper's JSON-RPC traffic in the "TypeScript 7" output
-channel.
+Set the TypeScript log level to Trace to see the mapper's JSON-RPC traffic in the "TypeScript 7"
+output channel.
 
 ## Debug in Neovim
 
