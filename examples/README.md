@@ -34,15 +34,29 @@ the template position. Set `TS_CONTENT_MAPPER_DEBUG=1` to log the JSON-RPC traff
 
 ## Debug in VS Code
 
-1. Install the [TypeScript (Native Preview)](https://marketplace.visualstudio.com/items?itemName=TypeScriptTeam.native-preview)
-   extension and enable `"typescript.experimental.useTsgo": true`.
-2. Trust the workspace. `tsc --lsp` only receives `--runExternalCode` in trusted workspaces;
-   otherwise `contentMappers` is ignored.
-3. Open a `.ts` file first so the server starts and discovers the app's `tsconfig.json`. Language
-   server activation for `.gts` files without an open TypeScript file requires a VS Code extension
-   that registers the mapper's extensions with the TypeScript extension, which does not exist yet.
-4. Set the TypeScript log level to Trace to see the mapper's JSON-RPC traffic and stderr in the
-   "TypeScript 7" output channel.
+VS Code cannot type-check `.gts` through the mapper yet. The newest marketplace build of the
+[TypeScript (Native Preview)](https://marketplace.visualstudio.com/items?itemName=TypeScriptTeam.native-preview)
+extension is `0.20260708.2` (2026-07-08). Content mapper support merged into TypeScript on
+2026-08-19. That extension build does not send the `runExternalCode` opt-in, so the server
+ignores `contentMappers`.
+
+What works today:
+
+1. Install the extension. Set `"typescript.experimental.useTsgo": true`. Plain `.ts` and `.js`
+   files then use the TypeScript 7 server.
+2. Disable the Glint extension for this workspace (Extensions view, "Disable (Workspace)"). Its
+   language server needs a TypeScript 5/6 workspace library, and these apps pin TypeScript 7.
+
+When an extension build newer than 2026-08-19 ships, two more steps apply:
+
+1. Trust the workspace. The extension sends `runExternalCode` only for trusted workspaces.
+2. Open a `.ts` file first so the server discovers the app's `tsconfig.json`. Full `.gts` editor
+   features also need an extension that registers the mapper's file extensions with the
+   TypeScript extension, and that does not exist yet.
+
+Until then, use the CLI (`pnpm lint:types`) or Neovim for template diagnostics. Set the
+TypeScript log level to Trace to see the mapper's JSON-RPC traffic in the "TypeScript 7" output
+channel.
 
 ## Debug in Neovim
 
