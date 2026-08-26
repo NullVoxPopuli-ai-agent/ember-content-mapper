@@ -85,6 +85,9 @@ Glint's directives work as before:
 - [`examples/`](./examples): two Ember apps that use the mapper.
 - [`test-packages/`](./test-packages): copies of Glint's test packages, with the known
   differences recorded in [test-packages/README.md](./test-packages/README.md).
+- [`test/`](./test): snapshot tests of the transform, tests of the server process, LSP tests
+  against the example app (hover, definition, completion, diagnostics, rename), and compiler
+  mode tests (declaration emit, `--build` up-to-date checks, option diagnostics).
 
 ## Prior art
 

@@ -3,5 +3,12 @@
   "printWidth": 100,
   "singleQuote": true,
   "sortPackageJson": false,
-  "ignorePatterns": ["examples/", "test-packages/", "**/*.md", "**/*.yml", "**/*.yaml"]
+  "ignorePatterns": [
+    "examples/",
+    "test-packages/",
+    "diagnostics-tests/declaration/expected/",
+    "**/*.md",
+    "**/*.yml",
+    "**/*.yaml"
+  ]
 }

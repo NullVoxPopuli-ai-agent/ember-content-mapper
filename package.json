@@ -15,8 +15,8 @@
     "lint:types": "tsc",
     "test": "node --test 'test/*.js'",
     "test:examples": "pnpm --filter nvp-app lint:types && pnpm --filter cli-app lint:types",
-    "test:typecheck": "node --test test/typecheck.js",
-    "test:unit": "node --test test/fixtures.js test/initialize.js test/project.js"
+    "test:typecheck": "node --test test/typecheck.js test/modes.js test/lsp.js",
+    "test:unit": "node --test test/fixtures.js test/initialize.js test/project.js test/server.js"
   },
   "dependencies": {
     "@glint/ember-tsc": "~1.11.0",

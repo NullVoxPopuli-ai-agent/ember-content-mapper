@@ -1,4 +1,6 @@
+diagnostics-tests/semantic/src/crlf.gts(4,13): error TS2339: Property 'nope' does not exist on type '1'.
 diagnostics-tests/semantic/src/script-error.gts(1,7): error TS2322: Type 'string' is not assignable to type 'number'.
 diagnostics-tests/semantic/src/template-errors.gts(5,15): error TS2339: Property 'missingProperty' does not exist on type 'Broken'.
 diagnostics-tests/semantic/src/template-errors.gts(6,10): error TS2304: Cannot find name 'fooBarNotDefined'.
+diagnostics-tests/semantic/src/unicode.gts(4,29): error TS2339: Property 'nope' does not exist on type '"héllo 🎉 wörld"'.
 diagnostics-tests/semantic/src/unused-directive.gts(4,3): error glint2578: Unused '@glint-expect-error' directive.
