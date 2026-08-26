@@ -1,6 +1,8 @@
 ## Text
 
 ```ts
+/// <reference types="ember-source/types" />
+/// <reference types="@glint/ember-tsc/types" />
 
 ```
 

@@ -6,7 +6,6 @@
     "emitDeclarationOnly": true,
     "outDir": "dist",
     "skipLibCheck": true,
-    "types": ["ember-source/types", "@glint/ember-tsc/types"],
     "rootDir": "src"
   },
   "contentMappers": [
