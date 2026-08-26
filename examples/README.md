@@ -1,27 +1,24 @@
 # Example apps
 
-Two full Ember apps wired to type-check with native TypeScript 7 and this content mapper. Use them
-to debug the mapper against real app code in your editor.
+Two Ember apps that type-check with TypeScript 7 and this mapper. Open them in your editor to
+debug the mapper against real app code.
 
-- `nvp-app`: generated with `pnpm dlx ember.nvp --type app --layers typescript --layers qunit --layers prettier`
-- `cli-app`: generated with `pnpm dlx ember-cli@latest new cli-app --typescript`
+- `nvp-app`: from `pnpm dlx ember.nvp --type app --layers typescript --layers qunit --layers prettier`
+- `cli-app`: from `pnpm dlx ember-cli@latest new cli-app --typescript`
 
-Changes from the generated output, in each app:
+Changes from the generated apps:
 
-- `typescript` is pinned to a 7.1 nightly.
-- `tsconfig.json` registers `ember-content-mapper` for `.gts`/`.gjs` under `contentMappers`.
-- `lint:types` runs `tsc --noEmit --runExternalCode` instead of `ember-tsc --noEmit`.
-- `@glint/tsserver-plugin` is removed. It only loads into a TypeScript 5/6 tsserver; with TS 7 the
-  content mapper covers type-checking instead.
+- `typescript` is a 7.1 nightly.
+- `tsconfig.json` has a `contentMappers` entry for `.gts` and `.gjs`.
+- `lint:types` runs `tsc --noEmit --runExternalCode`.
+- `@glint/tsserver-plugin` and the lint tooling are removed.
 
-Each app exercises the surfaces the mapper has to handle: a class-based component with a signature,
-tracked state, and yielded blocks (`counter.gts`), a template-only component (`greeting.gts`), an
-untyped `.gjs` component with a JSDoc signature (`avatar.gjs`), a custom modifier
-(`modifiers/autofocus.ts`) and plain functions used as helpers, a `.ts` barrel importing `.gts` and
-`.gjs` modules (`components/index.ts`), the Ember 7.1 built-in keywords (`on`, `gt`, `each`),
-`trackedArray` from `@ember/reactive/collections` (nvp-app), and a rendering test written in `.gts`.
+Each app has a class component with a signature and blocks (`counter.gts`), a template-only
+component (`greeting.gts`), a `.gjs` component with a JSDoc signature (`avatar.gjs`), a modifier,
+helper functions, a `.ts` file that imports `.gts` and `.gjs` modules (`components/index.ts`), the
+Ember 7.1 keywords, and a rendering test in `.gts`.
 
-## Type-check from the CLI
+## CLI
 
 ```sh
 pnpm install
@@ -29,18 +26,24 @@ pnpm --filter nvp-app lint:types
 pnpm --filter cli-app lint:types
 ```
 
-Add a type error inside a `<template>` tag in `app/templates/application.gts` to see it reported at
-the template position. Set `TS_CONTENT_MAPPER_DEBUG=1` to log the JSON-RPC traffic.
+Add a type error inside a `<template>` in `app/templates/application.gts`. The error points at
+the template. `TS_CONTENT_MAPPER_DEBUG=1` logs the JSON-RPC traffic.
 
-## Debug in VS Code
+## VS Code
 
-The marketplace build of the
-[TypeScript (Native Preview)](https://marketplace.visualstudio.com/items?itemName=TypeScriptTeam.native-preview)
-extension is `0.20260708.2` (2026-07-08) and predates content mapper support (merged
-2026-08-19). Until a newer build ships, build the extension from
-[microsoft/typescript-go](https://github.com/microsoft/typescript-go) main. The client code is
-TypeScript; the native server comes from the published platform package, so no Go toolchain is
-needed:
+Open the app directory, for example `code examples/nvp-app`.
+
+1. Install [TypeScript (Native Preview)](https://marketplace.visualstudio.com/items?itemName=TypeScriptTeam.native-preview).
+   The marketplace build `0.20260708.2` is older than content mapper support (2026-08-19). Until
+   a newer build ships, build it from `microsoft/typescript-go` main (see below).
+2. Install Glint 2 1.4.0 or newer. On TypeScript 7 workspaces it registers `.gts` and `.gjs`
+   with TypeScript (Native Preview) and does not start its own language server. The "Glint2
+   Language Server" output channel logs this.
+3. Set `"typescript.experimental.useTsgo": true`, trust the workspace, and reload.
+
+The "TypeScript 7" output channel logs the mapper's JSON-RPC traffic at log level Trace.
+
+To build TypeScript (Native Preview) from source:
 
 ```sh
 git clone --depth 1 --filter=blob:none --sparse https://github.com/microsoft/typescript-go.git
@@ -49,48 +52,27 @@ git sparse-checkout set _extension
 npm ci
 cd _extension
 npm run bundle:release
-# stage: copy _extension (minus node_modules and tsconfigs) to a clean directory,
-# then unpack the `lib/` of @typescript/typescript-<platform>@<nightly> into <stage>/lib
+```
+
+Copy `_extension` without `node_modules` to a new directory. Unpack the `lib/` directory of
+`@typescript/typescript-<platform>@<nightly>` into `<directory>/lib`. Then:
+
+```sh
 npx @vscode/vsce package 0.<date>.99 --no-update-package-json --no-dependencies --target <platform> --allow-unused-files-pattern
 code --install-extension native-preview-*.vsix
 ```
 
-Then:
+## Neovim
 
-1. Set `"typescript.experimental.useTsgo": true` and reload. Trust the workspace: the extension
-   sends the `runExternalCode` opt-in (setting `js/ts.contentMappers.enabled`, default true)
-   only for trusted workspaces.
-2. Disable the Glint extension for this workspace (Extensions view, "Disable (Workspace)"). Its
-   language server needs a TypeScript 5/6 workspace library, and these apps pin TypeScript 7.
-   [typed-ember/glint#1228](https://github.com/typed-ember/glint/pull/1228) makes the extension
-   stand down on TypeScript 7 workspaces by itself.
-3. Open a `.ts` file first so the server discovers the app's `tsconfig.json`. Full `.gts` editor
-   features also need an extension that registers the mapper's file extensions with the
-   TypeScript extension (`registerContentMappers`), and that does not exist yet.
-
-Set the TypeScript log level to Trace to see the mapper's JSON-RPC traffic in the "TypeScript 7"
-output channel.
-
-## Debug in Neovim
-
-Classic setups (`ts_ls` + `@glint/tsserver-plugin`, or `glint-language-server`) only work against a
-TypeScript 5/6 tsserver, so in these apps they paint syntax errors over every `<template>` tag.
-Detach them for content-mapper projects and use nvim-lspconfig's `tsc` (TypeScript 7's native LSP)
-instead:
+[ember.nvim](https://github.com/NullVoxPopuli/ember.nvim) attaches nvim-lspconfig's `tsc`
+(TypeScript 7's LSP) when the nearest `tsconfig.json` has `contentMappers`, and keeps `ts_ls`
+and `glint` detached. Without ember.nvim:
 
 ```lua
 vim.lsp.config('tsc', {
-  filetypes = {
-    'javascript',
-    'typescript',
-    'javascript.glimmer',
-    'typescript.glimmer',
-  },
-  init_options = {
-    -- Content mappers spawn processes declared by the project, so TypeScript
-    -- requires this explicit opt-in (VS Code sends it for trusted workspaces).
-    runExternalCode = true,
-  },
+  filetypes = { 'javascript', 'typescript', 'javascript.glimmer', 'typescript.glimmer' },
+  -- TypeScript starts content mappers only with this opt-in.
+  init_options = { runExternalCode = true },
   get_language_id = function(_, filetype)
     if filetype == 'typescript.glimmer' then
       return 'typescript'
@@ -105,7 +87,3 @@ vim.lsp.config('tsc', {
 })
 vim.lsp.enable('tsc')
 ```
-
-[ember.nvim](https://github.com/NullVoxPopuli/ember.nvim) does all of this automatically for
-projects whose tsconfig declares `contentMappers` (see
-[ember.nvim#4](https://github.com/NullVoxPopuli/ember.nvim/pull/4)).

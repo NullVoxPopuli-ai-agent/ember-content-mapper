@@ -1,67 +1,51 @@
 # test-packages
 
-This directory contains direct copies of the `test-packages/` from
-[typed-ember/glint](https://github.com/typed-ember/glint) at `v1.10.0-@glint/ember-tsc`. The
-source files are byte-identical to upstream. Only two files per package are adapted:
-`package.json` (published dependency versions, the TypeScript 7 nightly, this mapper) and
-`tsconfig.json` (a `contentMappers` entry, with the upstream top-level `glint` options mirrored
-into the mapper options).
+Copies of Glint's `test-packages/` at `v1.10.0-@glint/ember-tsc`. The source files are identical to
+upstream. Only `package.json` (published versions, the TypeScript 7 nightly, this mapper) and
+`tsconfig.json` (the `contentMappers` entry, with the upstream `glint` options as mapper options)
+are changed.
 
-These packages are the end-to-end corpus for the mapper. Their `{{! @glint-expect-error }}` and
-`// @ts-expect-error` directives are the assertions. A location without a directive is also an
-assertion: the type-checker must not report there.
+The `@glint-expect-error` and `@ts-expect-error` directives in these files are the assertions. A
+line without a directive asserts that there is no diagnostic.
 
-`test/typecheck.js` runs `tsc --runExternalCode` on each package. It compares the output with
-`expected/<package>.txt`. An empty file means that the package type-checks the same as Glint. A
-file with content records a known difference from Glint. When a difference is corrected, the
-test fails until the snapshot is recorded again.
+`test/typecheck.js` runs `tsc --runExternalCode` on each package and compares the output with
+`expected/<package>.txt`. An empty file means that the output is the same as Glint's. Other files
+record the known differences below. When a difference is fixed, the test fails until the file is
+updated.
 
-## Packages that are not copied
+Not copied: `package-test-core`, `package-test-template`, `test-utils` (vitest harnesses),
+`ts-plugin-test-app` and `ts-template-imports-app-no-config` (editor scenarios), `js-ember-app`
+(one empty fixture), `v2-ts-ember-addon` (a build test), and the `__tests__` and `*-fixture`
+directories of `ts-extensionless-app` (Glint's CLI harness).
 
-- `package-test-core`, `package-test-template`, `test-utils`: Glint's own vitest harnesses.
-- `ts-plugin-test-app`, `ts-template-imports-app-no-config`: editor scenarios for the tsserver
-  plugin and for inferred projects.
-- `js-ember-app`: one empty fixture for Glint's default-config tests.
-- `v2-ts-ember-addon`: a build-pipeline test.
-- The `__tests__` and `*-fixture` directories of `ts-extensionless-app`: they drive Glint's own
-  CLI harness (watch mode, build mode, tsc source patches). TypeScript 7 has none of that
-  machinery.
-
-## Known differences from Glint
+## Known differences
 
 `ts-gts-7-1-app`, `ts-special-forms-app`, and `ts-special-forms-pre-7-1-app` type-check clean.
-The differences below are recorded in `expected/*.txt`.
 
-### Extensionless imports of `.gts` modules
+### Extensionless imports
 
-TypeScript's content mapper resolution only accepts specifiers that end in a mapped extension.
-`import Greeting from './Greeting'` reports TS2307. Glint resolves it. This causes both errors
-in `ts-extensionless-app` and one error in `ts-template-imports-app` (`src/index.gts`).
+TypeScript resolves content-mapped files only when the specifier has the extension.
+`import Greeting from './Greeting'` reports TS2307. Glint resolves it. This causes both errors in
+`ts-extensionless-app` and one in `ts-template-imports-app` (`src/index.gts`).
 
-### `.gjs` files with handwritten declaration files
+### `.gjs` files with declaration files
 
-`with-declaration.gjs` has a handwritten `with-declaration.gjs.d.ts`. Glint types the module
-from the declaration file. The content mapper transforms the `.gjs` itself and does not read the
-declaration file. As a result, `Foo` types as a component without arguments. This causes the
-seven `with-declaration-consumer.gts` errors in `ts-template-imports-app`, which include one
-unused `@glint-expect-error`.
+Glint types `with-declaration.gjs` from `with-declaration.gjs.d.ts`. The mapper transforms the
+`.gjs` and does not read the declaration file, so `Foo` types as a component without arguments.
+This causes the seven `with-declaration-consumer.gts` errors in `ts-template-imports-app`.
 
-### The `ember-source` probe is per-process, not per-project
+### `ember-source` version per process
 
-Glint's ember-template-imports environment resolves `ember-source` from the location of
-`@glint/ember-tsc`. The result decides if the Ember 7.1 built-in keywords exist. One mapper
-process serves all projects, and it resolves the `ember-source` of the workspace root (7.x). A
-project that pins `ember-source` 6.x gets the 7.1-mode transform, but its types disagree. In
-`ts-template-imports-app`, `{{hash}}` in `Playground.gts` reports "Property 'hash' does not
-exist on type 'Keywords & Globals'". The correct fix is a probe root parameter in Glint's
-environment.
+Glint's environment resolves `ember-source` from the location of `@glint/ember-tsc`. One mapper
+process serves all projects and resolves the `ember-source` of the workspace root (7.x). A
+project with `ember-source` 6.x gets the 7.1 transform while its types disagree. In
+`ts-template-imports-app`, `{{hash}}` in `Playground.gts` reports "Property 'hash' does not exist
+on type 'Keywords & Globals'". The fix is a probe root parameter in Glint's environment.
 
-### Handlebars parse errors are reported, not hidden
+### Parse errors
 
-`ts-gts-7-1-app/src/globals/array-keyword-preserve-literals.test.gts` uses `{{! ... }}` short
-comments with nested mustaches. `@glimmer/syntax` cannot parse them. When this occurs, Glint's
-own CLI reports nothing and does not type-check the template
-([typed-ember/glint#1221](https://github.com/typed-ember/glint/issues/1221)). The mapper reports
-the parse error. A parse diagnostic stops TypeScript's semantic phase for the whole project. For
-that reason, the file is excluded in this copy's `tsconfig.json`, and the other 17 files stay
-verified.
+`ts-gts-7-1-app/src/globals/array-keyword-preserve-literals.test.gts` has `{{! ... }}` comments
+with nested mustaches, which `@glimmer/syntax` cannot parse. Glint's CLI reports nothing and does
+not check the template ([typed-ember/glint#1221](https://github.com/typed-ember/glint/issues/1221)).
+The mapper reports the parse error. A parse error stops TypeScript's semantic phase for the whole
+project, so the file is excluded in `tsconfig.json` and the other 17 files stay checked.
