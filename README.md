@@ -1,16 +1,12 @@
 # ember-content-mapper
 
-Type-check `.gts` and `.gjs` files with native TypeScript 7. No `ember-tsc`, no Volar.
+Type-check `.gts` and `.gjs` files with native TypeScript 7.
 
 This package is a [TypeScript content mapper](https://github.com/microsoft/typescript-go/pull/4712).
-`tsc --runExternalCode` starts it as a child process. It transforms each `.gts` and `.gjs` file
-with [Glint](https://github.com/typed-ember/glint)'s transform and returns the text with span
-mappings. Diagnostics point at the template source.
 
 ## Requirements
 
 - TypeScript 7.1 nightly or newer (`typescript@next`).
-- `@glint/ember-tsc` 1.11 or newer. It provides the template DSL types.
 
 ## Install
 
