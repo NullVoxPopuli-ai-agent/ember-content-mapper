@@ -10,5 +10,6 @@ minimumReleaseAgeExclude:
   - '@glint/ember-tsc@1.11.0'
   - ember-estree@0.8.0
 packages:
+  - '.'
   - examples/*
   - test-packages/*
