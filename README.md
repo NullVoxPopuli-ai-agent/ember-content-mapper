@@ -1,39 +1,26 @@
 # ember-content-mapper
 
-A [TypeScript content mapper](https://github.com/microsoft/typescript-go/pull/4712) for Ember's
-`.gts` and `.gjs` files.
+Type-check `.gts` and `.gjs` files with native TypeScript 7. No `ember-tsc`, no Volar.
 
-With this package, native TypeScript 7 (`tsc`) type-checks `<template>` tags directly. You do not
-need `ember-tsc`, Volar, or a separate CLI. `tsc --runExternalCode` starts the mapper as a child
-process. The mapper transforms each `.gts` and `.gjs` file with
-[Glint](https://github.com/typed-ember/glint)'s transform. TypeScript receives the transformed
-text and its span mappings. Diagnostics point at the original template source.
+This package is a [TypeScript content mapper](https://github.com/microsoft/typescript-go/pull/4712).
+`tsc --runExternalCode` starts it as a child process. It transforms each `.gts` and `.gjs` file
+with [Glint](https://github.com/typed-ember/glint)'s transform and returns the text with span
+mappings. Diagnostics point at the template source.
 
 ## Requirements
 
-- A TypeScript 7.1 nightly (`typescript@next`). Content mapper support shipped on 2026-08-19.
-- The `--runExternalCode` flag on each `tsc` command.
-- `@glint/ember-tsc`. It contains the template DSL types that the transformed output references.
+- TypeScript 7.1 nightly or newer (`typescript@next`).
+- `@glint/ember-tsc` 1.11 or newer. It provides the template DSL types.
 
-### No TypeScript 5 at runtime
-
-TypeScript 7 type-checks your project. Glint's transform is run through its standalone entry
-(`@glint/ember-tsc/transform/standalone`), which analyzes the script parts of each `.gts` file
-with [ember-estree](https://github.com/NullVoxPopuli/ember-estree) instead of the TypeScript
-JavaScript API, so the mapper does not carry a second TypeScript.
-
-When the script part of a file does not parse, the mapper reports the parse error and returns
-no transformed text for that file; TypeScript 7's own parser recovers from there.
-
-## Installation
+## Install
 
 ```sh
 pnpm add -D ember-content-mapper @glint/ember-tsc
 ```
 
-## Usage
+## Use
 
-Register the mapper in `tsconfig.json`. Include Glint's DSL types:
+Add the mapper and Glint's types to `tsconfig.json`:
 
 ```jsonc
 {
@@ -50,7 +37,7 @@ Register the mapper in `tsconfig.json`. Include Glint's DSL types:
 }
 ```
 
-Then type-check the project:
+Type-check:
 
 ```sh
 tsc --noEmit --runExternalCode
@@ -58,8 +45,7 @@ tsc --noEmit --runExternalCode
 
 ### Options
 
-The `options` object of the `contentMappers` entry accepts the same options as Glint's
-`ember-template-imports` environment:
+`options` accepts the options of Glint's `ember-template-imports` environment:
 
 ```jsonc
 {
@@ -78,36 +64,36 @@ The `options` object of the `contentMappers` entry accepts the same options as G
 
 ### Directives
 
-The mapper translates Glint's template directives to the native diagnostic directives of the
-content mapper protocol:
+Glint's directives work as before:
 
-- `{{! @glint-expect-error }}` suppresses the diagnostics of the next line of template content.
-  When it suppresses nothing, TypeScript reports
-  `glint2578: Unused '@glint-expect-error' directive.`
-- `{{! @glint-ignore }}` suppresses the diagnostics of the next line of template content.
-- `{{! @glint-nocheck }}` suppresses the diagnostics of the whole template.
+- `{{! @glint-expect-error }}` suppresses the diagnostics on the next line. If there are none,
+  TypeScript reports `glint2578: Unused '@glint-expect-error' directive.`
+- `{{! @glint-ignore }}` suppresses the diagnostics on the next line.
+- `{{! @glint-nocheck }}` suppresses the diagnostics in the whole template.
 
-## Example apps
+## Editors
 
-The [`examples/`](./examples) directory contains two full Ember apps. One comes from
-`pnpm dlx ember.nvp`. The other comes from `pnpm dlx ember-cli@latest new`. Both use TypeScript 7
-and this mapper. [examples/README.md](./examples/README.md) shows how to type-check them and how
-to configure VS Code and Neovim.
+- VS Code: TypeScript (Native Preview) plus Glint 2 1.4.0 or newer. Glint registers `.gts` and
+  `.gjs` with TypeScript and stands down its own language server.
+- Neovim: [ember.nvim](https://github.com/NullVoxPopuli/ember.nvim) attaches TypeScript 7's LSP
+  when `tsconfig.json` has `contentMappers`.
 
-## Tests
+[examples/README.md](./examples/README.md) has the details.
 
-The [`test-packages/`](./test-packages) directory contains direct copies of Glint's own test
-packages. Their `@glint-expect-error` and `@ts-expect-error` directives are the assertions.
-[test-packages/README.md](./test-packages/README.md) documents the known differences from Glint.
+## Debug
 
-## Debugging
+`TS_CONTENT_MAPPER_DEBUG=1` logs the JSON-RPC traffic between `tsc` and the mapper.
 
-Set `TS_CONTENT_MAPPER_DEBUG=1` to log the JSON-RPC traffic between `tsc` and the mapper.
+## Repository
+
+- [`examples/`](./examples): two Ember apps that use the mapper.
+- [`test-packages/`](./test-packages): copies of Glint's test packages, with the known
+  differences recorded in [test-packages/README.md](./test-packages/README.md).
 
 ## Prior art
 
-- [mdx-content-mapper](https://github.com/remcohaszing/mdx-content-mapper). This package follows
-  its structure.
+- [mdx-content-mapper](https://github.com/remcohaszing/mdx-content-mapper), which this package
+  follows.
 - [Vue's content mapper](https://github.com/vuejs/language-tools/issues/6170).
 
 ## License
