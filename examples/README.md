@@ -60,13 +60,14 @@ Then:
 1. Set `"typescript.experimental.useTsgo": true` and reload. Trust the workspace: the extension
    sends the `runExternalCode` opt-in (setting `js/ts.contentMappers.enabled`, default true)
    only for trusted workspaces.
-2. Disable the Glint extension for this workspace (Extensions view, "Disable (Workspace)"). Its
-   language server needs a TypeScript 5/6 workspace library, and these apps pin TypeScript 7.
-   [typed-ember/glint#1228](https://github.com/typed-ember/glint/pull/1228) makes the extension
-   stand down on TypeScript 7 workspaces by itself.
-3. Open a `.ts` file first so the server discovers the app's `tsconfig.json`. Full `.gts` editor
-   features also need an extension that registers the mapper's file extensions with the
-   TypeScript extension (`registerContentMappers`), and that does not exist yet.
+2. Install a Glint extension build that includes
+   [typed-ember/glint#1228](https://github.com/typed-ember/glint/pull/1228). On TypeScript 7
+   workspaces it stands down its own language server and registers `.gts` and `.gjs` with
+   TypeScript (Native Preview) through `registerContentMappers`. Without that registration, the
+   TypeScript server never receives `.gts` documents, so they get no hover, completions, or
+   diagnostics even though the CLI checks them. Until the build ships, package it from the PR
+   branch: build the glint monorepo, then run `vsce package` in `packages/vscode` and install
+   the VSIX. The "Glint2 Language Server" output channel logs the registration result.
 
 Set the TypeScript log level to Trace to see the mapper's JSON-RPC traffic in the "TypeScript 7"
 output channel.
