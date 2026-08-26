@@ -1,0 +1,30 @@
+{
+  "solution": {
+    "ember-content-mapper": {
+      "impact": "minor",
+      "oldVersion": "0.0.0",
+      "newVersion": "0.1.0",
+      "tagName": "latest",
+      "constraints": [
+        {
+          "impact": "minor",
+          "reason": "Appears in changelog section :rocket: Enhancement"
+        },
+        {
+          "impact": "patch",
+          "reason": "Appears in changelog section :bug: Bug Fix"
+        },
+        {
+          "impact": "patch",
+          "reason": "Appears in changelog section :memo: Documentation"
+        },
+        {
+          "impact": "patch",
+          "reason": "Appears in changelog section :house: Internal"
+        }
+      ],
+      "pkgJSONPath": "./package.json"
+    }
+  },
+  "description": "## Release (2026-08-26)\n\n* ember-content-mapper 0.1.0 (minor)\n\n#### :rocket: Enhancement\n* `ember-content-mapper`\n  * [#2](https://github.com/NullVoxPopuli/ember-content-mapper/pull/2) Run Glint's transform through its standalone entry; no TypeScript 5 at runtime ([@NullVoxPopuli-ai-agent](https://github.com/NullVoxPopuli-ai-agent))\n  * [#1](https://github.com/NullVoxPopuli/ember-content-mapper/pull/1) Implement a TypeScript 7 content mapper for .gts/.gjs files ([@NullVoxPopuli-ai-agent](https://github.com/NullVoxPopuli-ai-agent))\n\n#### :bug: Bug Fix\n* `ember-content-mapper`\n  * [#6](https://github.com/NullVoxPopuli/ember-content-mapper/pull/6) Update readme ([@NullVoxPopuli](https://github.com/NullVoxPopuli))\n\n#### :memo: Documentation\n* `ember-content-mapper`\n  * [#3](https://github.com/NullVoxPopuli/ember-content-mapper/pull/3) Simplify the READMEs and document editor setup ([@NullVoxPopuli-ai-agent](https://github.com/NullVoxPopuli-ai-agent))\n\n#### :house: Internal\n* `ember-content-mapper`\n  * [#9](https://github.com/NullVoxPopuli/ember-content-mapper/pull/9) Update wrkspace ([@NullVoxPopuli](https://github.com/NullVoxPopuli))\n  * [#8](https://github.com/NullVoxPopuli/ember-content-mapper/pull/8) Format with oxfmt instead of prettier ([@NullVoxPopuli-ai-agent](https://github.com/NullVoxPopuli-ai-agent))\n  * [#4](https://github.com/NullVoxPopuli/ember-content-mapper/pull/4) Release Plan ([@NullVoxPopuli](https://github.com/NullVoxPopuli))\n\n#### Committers: 2\n- @NullVoxPopuli's reduced-access machine account for AI usage ([@NullVoxPopuli-ai-agent](https://github.com/NullVoxPopuli-ai-agent))\n- [@NullVoxPopuli](https://github.com/NullVoxPopuli)\n"
+}
