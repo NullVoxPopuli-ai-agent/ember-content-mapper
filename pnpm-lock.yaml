@@ -57,6 +57,9 @@ importers:
       typescript-7:
         specifier: npm:typescript@7.1.0-dev.20260821.1
         version: typescript@7.1.0-dev.20260821.1
+      vscode-languageserver-protocol:
+        specifier: ^3.18.2
+        version: 3.18.2
 
   examples/cli-app:
     dependencies:
