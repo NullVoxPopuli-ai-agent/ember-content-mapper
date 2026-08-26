@@ -37,21 +37,6 @@ Type-check:
 tsc --noEmit --runExternalCode
 ```
 
-`compilerOptions.types` needs no entries for this. Every transformed module starts with
-
-```ts
-/// <reference types="ember-source/types" />
-/// <reference types="@glint/ember-tsc/types" />
-```
-
-so Glint's integration declarations and Ember's own types are in the program. Both packages
-declare ambient types, so one `.gts` or `.gjs` file in the project covers your `.ts` files too.
-`ember-source/types` is only referenced when `ember-source` is installed.
-
-If a reference does not resolve, TypeScript reports `TS2688: Cannot find type definition file for
-'...'` on the `.gts` file, with a note that the location is in virtual code. Install the package
-it names.
-
 ### Options
 
 `options` accepts the options of Glint's `ember-template-imports` environment:
