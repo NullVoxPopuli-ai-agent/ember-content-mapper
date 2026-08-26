@@ -2,8 +2,7 @@
   "extends": "@tsconfig/ember/tsconfig.json",
   "compilerOptions": {
     "noEmit": true,
-    "skipLibCheck": true,
-    "types": ["ember-source/types", "@glint/ember-tsc/types"]
+    "skipLibCheck": true
   },
   "contentMappers": [
     {

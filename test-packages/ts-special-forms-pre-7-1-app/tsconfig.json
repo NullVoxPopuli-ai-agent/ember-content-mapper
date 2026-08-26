@@ -1,11 +1,7 @@
 {
   "extends": "@tsconfig/ember",
   "compilerOptions": {
-    "noEmit": true,
-    "types": [
-      "ember-source/types",
-      "@glint/ember-tsc/types"
-    ]
+    "noEmit": true
   },
   "include": [
     "src",

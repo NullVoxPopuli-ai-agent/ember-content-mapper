@@ -8,10 +8,8 @@
       "dom.iterable"
     ],
     "types": [
-      "ember-source/types",
       "@embroider/core/virtual",
-      "vite/client",
-      "@glint/ember-tsc/types"
+      "vite/client"
     ]
   },
   "contentMappers": [

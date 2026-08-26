@@ -17,13 +17,10 @@ pnpm add -D ember-content-mapper @glint/ember-tsc
 
 ## Use
 
-Add the mapper and Glint's types to `tsconfig.json`:
+Add the mapper to `tsconfig.json`:
 
 ```jsonc
 {
-  "compilerOptions": {
-    "types": ["ember-source/types", "@glint/ember-tsc/types"],
-  },
   "contentMappers": [
     {
       "package": "ember-content-mapper",
@@ -39,6 +36,21 @@ Type-check:
 ```sh
 tsc --noEmit --runExternalCode
 ```
+
+`compilerOptions.types` needs no entries for this. Every transformed module starts with
+
+```ts
+/// <reference types="ember-source/types" />
+/// <reference types="@glint/ember-tsc/types" />
+```
+
+so Glint's integration declarations and Ember's own types are in the program. Both packages
+declare ambient types, so one `.gts` or `.gjs` file in the project covers your `.ts` files too.
+`ember-source/types` is only referenced when `ember-source` is installed.
+
+If a reference does not resolve, TypeScript reports `TS2688: Cannot find type definition file for
+'...'` on the `.gts` file, with a note that the location is in virtual code. Install the package
+it names.
 
 ### Options
 
@@ -67,6 +79,62 @@ Glint's directives work as before:
   TypeScript reports `glint2578: Unused '@glint-expect-error' directive.`
 - `{{! @glint-ignore }}` suppresses the diagnostics on the next line.
 - `{{! @glint-nocheck }}` suppresses the diagnostics in the whole template.
+
+## Migrating from TS6
+
+On TypeScript 6, Glint 2 type-checks `.gts` and `.gjs` with its own compiler, `ember-tsc`, and
+serves editors from its own language server. TypeScript 7 does both itself and calls this mapper
+for the transform. So most of the migration is deleting configuration.
+
+Install the TypeScript 7 nightly and the mapper:
+
+```sh
+pnpm add -D typescript@next ember-content-mapper
+```
+
+Keep `@glint/ember-tsc` and `@glint/template` installed. The mapper transforms with
+`@glint/ember-tsc` and references its types, and `@glint/template` types the signatures you write
+by hand.
+
+### tsconfig.json
+
+Add the `contentMappers` entry from [Use](#use). Then remove:
+
+- `"ember-source/types"` and `"@glint/ember-tsc/types"` from `compilerOptions.types`. The mapper
+  references both from the transformed text now. Keep every other entry, for example
+  `"@embroider/core/virtual"` or `"vite/client"`. If nothing is left and the config extends
+  `@tsconfig/ember` or `@ember/app-tsconfig`, drop the key: those already set `"types": []`.
+- `{ "name": "@glint/tsserver-plugin" }` from `compilerOptions.plugins`. TypeScript 7 does not
+  load tsserver plugins. The `contentMappers` entry replaces it.
+
+If the project still has a Glint 1 `glint` key, its `environment` options move to the mapper's
+`options`. See [Options](#options).
+
+### package.json
+
+- Replace `ember-tsc` in your scripts with `tsc --noEmit --runExternalCode`. Without
+  `--runExternalCode`, TypeScript reports `TS100024: Content mappers require the
+  '--runExternalCode' command line flag to be enabled.`
+- Remove `@glint/tsserver-plugin`.
+
+### Source
+
+Add the extension to relative imports of `.gts` and `.gjs` modules:
+
+```diff
+-export { default as Counter } from './counter';
++export { default as Counter } from './counter.gts';
+```
+
+TypeScript resolves a content-mapped file only when the specifier has the extension. Glint
+resolved it either way, so this is usually the only source change the migration needs.
+
+Glint's `{{! @glint-expect-error }}`, `{{! @glint-ignore }}`, and `{{! @glint-nocheck }}`
+directives keep working. See [Directives](#directives).
+
+### Editor
+
+Glint's language server is no longer in the loop. See [Editors](#editors) for what replaces it.
 
 ## Editors
 

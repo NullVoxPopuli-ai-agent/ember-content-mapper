@@ -1,6 +1,8 @@
 ## Text
 
 ```ts
+/// <reference types="ember-source/types" />
+/// <reference types="@glint/ember-tsc/types" />
 import Component from '@glimmer/component';
 
 export interface GreetingSignature {
@@ -27,34 +29,34 @@ __glintRef__; __glintDSL__;
 
 ## Mappings
 
-- verbatim [0, 251) -> [0, 251) features=all "import Component from '@glimmer/component';\n\nexport interface GreetingSignatu…
-- atom [251, 281) -> [251, 251) features=0 "static { ({} as typeof import(" <- ""
-- atom [281, 312) -> [261, 261) features=727039 "\"@glint/ember-tsc/-private/dsl\"" <- ""
-- atom [312, 432) -> [251, 251) features=0 ")).templateForBackingValue(this, function(__glintRef__, __glintDSL__: typeof im… <- ""
-- atom [432, 478) -> [266, 266) features=0 "{\n__glintDSL__.noop(__glintDSL__.elementTypes." <- ""
-- verbatim [478, 479) -> [267, 268) features=529411 "p"
-- atom [479, 527) -> [266, 266) features=0 ");\n__glintDSL__.noop(__glintDSL__.elementTypes[\"" <- ""
-- verbatim [527, 528) -> [267, 268) features=66552 "p"
-- atom [528, 539) -> [266, 266) features=0 "\"]);\nconst " <- ""
-- atom [549, 583) -> [266, 266) features=0 " = __glintDSL__.emitElement(\"p\");\n" <- ""
-- atom [583, 608) -> [276, 276) features=0 "__glintDSL__.emitContent(" <- ""
-- atom [608, 637) -> [278, 278) features=0 "__glintDSL__.resolveOrReturn(" <- ""
-- atom [637, 650) -> [278, 278) features=0 "__glintRef__." <- ""
-- verbatim [650, 654) -> [278, 282) features=727039 "this"
-- atom [654, 655) -> [278, 278) features=0 "." <- ""
-- verbatim [655, 659) -> [283, 287) features=727039 "loud"
-- atom [659, 660) -> [278, 278) features=0 ")" <- ""
-- atom [660, 662) -> [276, 276) features=0 "()" <- ""
-- atom [662, 663) -> [276, 276) features=0 ")" <- ""
-- atom [663, 665) -> [266, 266) features=0 ";\n" <- ""
-- atom [665, 667) -> [266, 266) features=0 "}\n" <- ""
-- atom [667, 699) -> [251, 251) features=0 "__glintRef__; __glintDSL__;\n}) }" <- ""
-- verbatim [699, 702) -> [308, 311) features=all "\n}\n"
+- verbatim [94, 345) -> [0, 251) features=all "import Component from '@glimmer/component';\n\nexport interface GreetingSignatu…
+- atom [345, 375) -> [251, 251) features=0 "static { ({} as typeof import(" <- ""
+- atom [375, 406) -> [261, 261) features=727039 "\"@glint/ember-tsc/-private/dsl\"" <- ""
+- atom [406, 526) -> [251, 251) features=0 ")).templateForBackingValue(this, function(__glintRef__, __glintDSL__: typeof im… <- ""
+- atom [526, 572) -> [266, 266) features=0 "{\n__glintDSL__.noop(__glintDSL__.elementTypes." <- ""
+- verbatim [572, 573) -> [267, 268) features=529411 "p"
+- atom [573, 621) -> [266, 266) features=0 ");\n__glintDSL__.noop(__glintDSL__.elementTypes[\"" <- ""
+- verbatim [621, 622) -> [267, 268) features=66552 "p"
+- atom [622, 633) -> [266, 266) features=0 "\"]);\nconst " <- ""
+- atom [643, 677) -> [266, 266) features=0 " = __glintDSL__.emitElement(\"p\");\n" <- ""
+- atom [677, 702) -> [276, 276) features=0 "__glintDSL__.emitContent(" <- ""
+- atom [702, 731) -> [278, 278) features=0 "__glintDSL__.resolveOrReturn(" <- ""
+- atom [731, 744) -> [278, 278) features=0 "__glintRef__." <- ""
+- verbatim [744, 748) -> [278, 282) features=727039 "this"
+- atom [748, 749) -> [278, 278) features=0 "." <- ""
+- verbatim [749, 753) -> [283, 287) features=727039 "loud"
+- atom [753, 754) -> [278, 278) features=0 ")" <- ""
+- atom [754, 756) -> [276, 276) features=0 "()" <- ""
+- atom [756, 757) -> [276, 276) features=0 ")" <- ""
+- atom [757, 759) -> [266, 266) features=0 ";\n" <- ""
+- atom [759, 761) -> [266, 266) features=0 "}\n" <- ""
+- atom [761, 793) -> [251, 251) features=0 "__glintRef__; __glintDSL__;\n}) }" <- ""
+- verbatim [793, 796) -> [308, 311) features=all "\n}\n"
 
 ## Diagnostic directives
 
-- ignore [267, 268) "p" over [478, 479) "p"
-- ignore [267, 268) "p" over [527, 528) "p"
+- ignore [267, 268) "p" over [572, 573) "p"
+- ignore [267, 268) "p" over [621, 622) "p"
 
 ## Diagnostics
 

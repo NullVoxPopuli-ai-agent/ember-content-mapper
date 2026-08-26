@@ -12,6 +12,8 @@ Changes from the generated apps:
 - `tsconfig.json` has a `contentMappers` entry for `.gts` and `.gjs`.
 - `lint:types` runs `tsc --noEmit --runExternalCode`.
 - `@glint/tsserver-plugin` and the lint tooling are removed.
+- `compilerOptions.types` no longer lists `ember-source/types` or `@glint/ember-tsc/types`. The
+  mapper references both from the transformed text.
 
 Each app has a class component with a signature and blocks (`counter.gts`), a template-only
 component (`greeting.gts`), a `.gjs` component with a JSDoc signature (`avatar.gjs`), a modifier,
