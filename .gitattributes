@@ -1,1 +1,1 @@
-diagnostics-tests/semantic/src/crlf.gts -text
+test/diagnostics-tests/semantic/src/crlf.gts -text

@@ -4,14 +4,14 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { test } from 'node:test';
 
-const root = fileURLToPath(new URL('..', import.meta.url));
+const testDirectory = fileURLToPath(new URL('.', import.meta.url));
 const tsc7 = fileURLToPath(new URL('../node_modules/typescript-7/bin/tsc', import.meta.url));
 
 /**
  * Run TypeScript 7 with the content mapper enabled on a project.
  *
  * @param {string} project
- *   The project directory, relative to the repository root.
+ *   The project directory, relative to the test directory.
  * @returns {string}
  *   The combined tsc output.
  */
@@ -19,7 +19,7 @@ function typecheck(project) {
   try {
     return String(
       execFileSync(process.execPath, [tsc7, '-p', project, '--runExternalCode'], {
-        cwd: root,
+        cwd: testDirectory,
         stdio: ['ignore', 'pipe', 'pipe'],
       }),
     );
@@ -46,7 +46,7 @@ const testPackages = [
 for (const name of testPackages) {
   test(`test-packages/${name} matches its expected output`, () => {
     const expected = readFileSync(
-      new URL(`../test-packages/expected/${name}.txt`, import.meta.url),
+      new URL(`test-packages/expected/${name}.txt`, import.meta.url),
       'utf8',
     );
 
@@ -57,7 +57,7 @@ for (const name of testPackages) {
 for (const project of ['semantic', 'parse-error', 'invalid-options']) {
   test(`diagnostics-tests/${project} reports mapped diagnostics`, () => {
     const expected = readFileSync(
-      new URL(`../diagnostics-tests/${project}/expected-output.txt`, import.meta.url),
+      new URL(`diagnostics-tests/${project}/expected-output.txt`, import.meta.url),
       'utf8',
     );
 

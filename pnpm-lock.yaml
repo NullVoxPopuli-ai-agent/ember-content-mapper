@@ -389,7 +389,7 @@ importers:
         specifier: npm:typescript@7.1.0-dev.20260821.1
         version: typescript@7.1.0-dev.20260821.1
 
-  test-packages/ts-extensionless-app:
+  test/test-packages/ts-extensionless-app:
     devDependencies:
       '@glimmer/component':
         specifier: ^2.0.0
@@ -414,7 +414,7 @@ importers:
         version: 4.0.9
       ember-content-mapper:
         specifier: workspace:*
-        version: link:../..
+        version: link:../../..
       ember-modifier:
         specifier: ^4.0.0
         version: 4.3.0(@babel/core@7.29.7(supports-color@10.2.2))(supports-color@10.2.2)
@@ -425,7 +425,7 @@ importers:
         specifier: 7.1.0-dev.20260821.1
         version: 7.1.0-dev.20260821.1
 
-  test-packages/ts-gts-7-1-app:
+  test/test-packages/ts-gts-7-1-app:
     devDependencies:
       '@glimmer/component':
         specifier: ^2.0.0
@@ -444,7 +444,7 @@ importers:
         version: 3.0.12
       ember-content-mapper:
         specifier: workspace:*
-        version: link:../..
+        version: link:../../..
       ember-source:
         specifier: ~7.1.0-beta.1
         version: 7.1.0(@glimmer/component@2.1.1(supports-color@10.2.2))(supports-color@10.2.2)
@@ -455,7 +455,7 @@ importers:
         specifier: 7.1.0-dev.20260821.1
         version: 7.1.0-dev.20260821.1
 
-  test-packages/ts-special-forms-app:
+  test/test-packages/ts-special-forms-app:
     devDependencies:
       '@glimmer/component':
         specifier: ^2.0.0
@@ -474,7 +474,7 @@ importers:
         version: 3.0.12
       ember-content-mapper:
         specifier: workspace:*
-        version: link:../..
+        version: link:../../..
       ember-source:
         specifier: ~7.1.0-beta.1
         version: 7.1.0(@glimmer/component@2.1.1(supports-color@10.2.2))(supports-color@10.2.2)
@@ -482,7 +482,7 @@ importers:
         specifier: 7.1.0-dev.20260821.1
         version: 7.1.0-dev.20260821.1
 
-  test-packages/ts-special-forms-pre-7-1-app:
+  test/test-packages/ts-special-forms-pre-7-1-app:
     devDependencies:
       '@glimmer/component':
         specifier: ^2.0.0
@@ -501,7 +501,7 @@ importers:
         version: 3.0.12
       ember-content-mapper:
         specifier: workspace:*
-        version: link:../..
+        version: link:../../..
       ember-source:
         specifier: ^6.2.0
         version: 6.12.0(@glimmer/component@2.1.1(supports-color@10.2.2))(rsvp@4.8.5)(supports-color@10.2.2)
@@ -509,7 +509,7 @@ importers:
         specifier: 7.1.0-dev.20260821.1
         version: 7.1.0-dev.20260821.1
 
-  test-packages/ts-template-imports-app:
+  test/test-packages/ts-template-imports-app:
     devDependencies:
       '@glimmer/component':
         specifier: ^2.0.0
@@ -531,7 +531,7 @@ importers:
         version: 4.0.9
       ember-content-mapper:
         specifier: workspace:*
-        version: link:../..
+        version: link:../../..
       ember-modifier:
         specifier: ^4.0.0
         version: 4.3.0(@babel/core@7.29.7(supports-color@10.2.2))(supports-color@10.2.2)

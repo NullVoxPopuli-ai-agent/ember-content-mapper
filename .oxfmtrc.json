@@ -5,8 +5,8 @@
   "sortPackageJson": false,
   "ignorePatterns": [
     "examples/",
-    "test-packages/",
-    "diagnostics-tests/declaration/expected/",
+    "test/test-packages/",
+    "test/diagnostics-tests/declaration/expected/",
     "**/*.md",
     "**/*.yml",
     "**/*.yaml"
