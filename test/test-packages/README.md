@@ -30,9 +30,11 @@ TypeScript resolves content-mapped files only when the specifier has the extensi
 
 ### `.gjs` files with declaration files
 
-Glint types `with-declaration.gjs` from `with-declaration.gjs.d.ts`. The mapper transforms the
-`.gjs` and does not read the declaration file, so `Foo` types as a component without arguments.
-This causes the seven `with-declaration-consumer.gts` errors in `ts-template-imports-app`.
+Like Glint, the mapper types `with-declaration.gjs` from `with-declaration.gjs.d.ts`: a sibling
+declaration file (either Glint's `x.gjs.d.ts` convention or TypeScript 7's `x.d.gjs.ts`) wins
+over transforming the module. The declaration is parsed as a `.ts` module, so anything unbodied
+or uninitialized in it must use ambient (`declare`) syntax. Editing only the declaration may not
+invalidate TypeScript's cached transform of the sibling until the next full run.
 
 ### `ember-source` version per process
 

@@ -1,10 +1,2 @@
 test-packages/ts-template-imports-app/src/Playground.gts(41,15): error TS2339: Property 'hash' does not exist on type 'Keywords & Globals'.
 test-packages/ts-template-imports-app/src/index.gts(1,22): error TS2307: Cannot find module './Greeting' or its corresponding type declarations.
-test-packages/ts-template-imports-app/src/with-declaration-consumer.gts(5,3): error glint2578: Unused '@glint-expect-error' directive.
-test-packages/ts-template-imports-app/src/with-declaration-consumer.gts(11,3): error TS2554: Expected 0 arguments, but got 1.
-test-packages/ts-template-imports-app/src/with-declaration-consumer.gts(13,3): error TS2554: Expected 0 arguments, but got 1.
-test-packages/ts-template-imports-app/src/with-declaration-consumer.gts(13,3): error TS7053: Element implicitly has an 'any' type because expression of type '"default"' can't be used to index type 'Required<{}>'.
-  Property 'default' does not exist on type 'Required<{}>'.
-test-packages/ts-template-imports-app/src/with-declaration-consumer.gts(17,3): error TS2554: Expected 0 arguments, but got 1.
-test-packages/ts-template-imports-app/src/with-declaration-consumer.gts(17,21): error TS2345: Argument of type 'null' is not assignable to parameter of type 'Element'.
-test-packages/ts-template-imports-app/src/with-declaration-consumer.gts(17,31): error TS2345: Argument of type 'null' is not assignable to parameter of type 'Element'.
