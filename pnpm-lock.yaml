@@ -203,7 +203,7 @@ importers:
         specifier: ^8.2.1
         version: 8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.50.0)(yaml@2.9.0)
 
-  examples/ember-library-v2:
+  examples/cli-library-v2:
     dependencies:
       '@embroider/addon-shim':
         specifier: ^1.8.9

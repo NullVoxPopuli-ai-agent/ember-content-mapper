@@ -1,5 +1,6 @@
 {
   "name": "nvp-library",
+  "private": true,
   "version": "0.0.0",
   "description": "Your Ember library's description here",
   "license": "MIT",
