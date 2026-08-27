@@ -1,5 +1,25 @@
 # Changelog
 
+## Release (2026-08-27)
+
+* ember-content-mapper 0.2.1 (patch)
+
+#### :bug: Bug Fix
+* `ember-content-mapper`
+  * [#24](https://github.com/NullVoxPopuli/ember-content-mapper/pull/24) Report empty-area expect-error directives, document Node 22 and upstream differences ([@NullVoxPopuli-ai-agent](https://github.com/NullVoxPopuli-ai-agent))
+  * [#22](https://github.com/NullVoxPopuli/ember-content-mapper/pull/22) Honor sibling declaration files (x.d.gjs.ts / x.gjs.d.ts) instead of transforming the module ([@NullVoxPopuli](https://github.com/NullVoxPopuli))
+
+#### :house: Internal
+* `ember-content-mapper`
+  * [#25](https://github.com/NullVoxPopuli/ember-content-mapper/pull/25) Make libraries private ([@NullVoxPopuli](https://github.com/NullVoxPopuli))
+  * [#21](https://github.com/NullVoxPopuli/ember-content-mapper/pull/21) Move lib to src ([@NullVoxPopuli](https://github.com/NullVoxPopuli))
+  * [#20](https://github.com/NullVoxPopuli/ember-content-mapper/pull/20) Consolidate test folders ([@NullVoxPopuli](https://github.com/NullVoxPopuli))
+  * [#18](https://github.com/NullVoxPopuli/ember-content-mapper/pull/18) library examples ([@NullVoxPopuli](https://github.com/NullVoxPopuli))
+
+#### Committers: 2
+- @NullVoxPopuli's reduced-access machine account for AI usage ([@NullVoxPopuli-ai-agent](https://github.com/NullVoxPopuli-ai-agent))
+- [@NullVoxPopuli](https://github.com/NullVoxPopuli)
+
 ## Release (2026-08-26)
 
 * ember-content-mapper 0.2.0 (minor)
