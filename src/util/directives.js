@@ -1,6 +1,6 @@
 /**
  * @import { DiagnosticDirectives, MappedDiagnosticDirective } from '../protocol.js'
- * @import { DirectiveAnalysis, Region } from './mappings.js'
+ * @import { DirectiveAnalysis, Placeholder, Region } from './mappings.js'
  */
 
 import { DiagnosticDirectivePolicy } from '../constants.js';
@@ -92,10 +92,13 @@ class DisjointRanges {
  *
  * @param {DirectiveAnalysis} analysis
  *   The directive analysis produced by `buildMappings`.
+ * @param {Set<Placeholder>} [usedPlaceholders]
+ *   Placeholders whose directive suppressed a transform error. TypeScript
+ *   never sees those errors, so it must not report the directive as unused.
  * @returns {DiagnosticDirectives | undefined}
  *   The diagnostic directives, if any.
  */
-export function buildDiagnosticDirectives(analysis) {
+export function buildDiagnosticDirectives(analysis, usedPlaceholders = new Set()) {
   /** @type {MappedDiagnosticDirective[]} */
   const directives = [];
 
@@ -182,6 +185,27 @@ export function buildDiagnosticDirectives(analysis) {
 
   for (const region of mergeRegions(unowned)) {
     emit(region, DiagnosticDirectivePolicy.Expect);
+  }
+
+  // A directive whose area of effect transforms to nothing (the next line is
+  // blank, a closing tag, or another directive) owns no nodes, so nothing
+  // above reports it. It is unused by definition. Expect a diagnostic on the
+  // placeholder's empty statement instead: there never is one, so TypeScript
+  // reports the directive comment.
+  for (const [index, placeholder] of placeholders.entries()) {
+    if (byPlaceholder.has(index) || usedPlaceholders.has(placeholder)) {
+      continue;
+    }
+
+    emit(
+      {
+        originalStart: placeholder.originalStart,
+        originalEnd: placeholder.originalEnd,
+        virtualStart: placeholder.statementStart,
+        virtualEnd: placeholder.statementEnd,
+      },
+      DiagnosticDirectivePolicy.Expect,
+    );
   }
 
   for (const region of analysis.scaffolding) {

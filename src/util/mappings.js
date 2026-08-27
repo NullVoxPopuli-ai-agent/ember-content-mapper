@@ -19,6 +19,14 @@ import { SpanMapFeature, SpanMapKind } from '../constants.js';
  */
 
 /**
+ * The placeholder Glint emits for an `@glint-expect-error` directive: a
+ * `// @ts-expect-error` comment followed by an empty `;` statement, so that
+ * the comment has a line to apply to.
+ *
+ * @typedef {Region & { statementStart: number, statementEnd: number }} Placeholder
+ */
+
+/**
  * Directive-related regions recovered from the mapping tree.
  *
  * Glint does not report `@glint-expect-error` / `@glint-ignore` /
@@ -33,7 +41,7 @@ import { SpanMapFeature, SpanMapKind } from '../constants.js';
  * @property {Region[]} scaffolding
  *   Synthesized regions (placeholder comments, the auto-import anchor) whose
  *   TypeScript diagnostics must be suppressed.
- * @property {Region[]} placeholders
+ * @property {Placeholder[]} placeholders
  *   Placeholder comment regions; their original range is the
  *   `@glint-expect-error` directive comment.
  * @property {Region[]} expectNodes
@@ -185,7 +193,8 @@ export function buildMappings(transformedModule) {
         // The placeholder comment Glint emits for an expect-error directive.
         // Left unsuppressed it would always produce TS2578.
         analysis.scaffolding.push(region);
-        analysis.placeholders.push(region);
+        const statementStart = transformed.indexOf(';', virtualEnd);
+        analysis.placeholders.push({ ...region, statementStart, statementEnd: statementStart + 1 });
         return;
       }
 

@@ -6,7 +6,8 @@ This package is a [TypeScript content mapper](https://github.com/microsoft/types
 
 ## Requirements
 
-- TypeScript 7.1 nightly or newer (`typescript@next`).
+- TypeScript 7.1 nightly or newer (`typescript@next`)
+- Node 22.21.1 or newer, or Node 24.10.0 or newer 
 - imports must specify the file extensions
 
 ## Install

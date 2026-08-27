@@ -40,6 +40,9 @@
     "vscode-languageserver-protocol": "^3.18.2"
   },
   "packageManager": "pnpm@11.22.0",
+  "engines": {
+    "node": "^22.21.1 || >=24.10.0"
+  },
   "typescript": {
     "contentMapper": {
       "exec": [
