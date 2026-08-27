@@ -66,6 +66,15 @@ Glint's directives work as before:
 - `{{! @glint-ignore }}` suppresses the diagnostics on the next line.
 - `{{! @glint-nocheck }}` suppresses the diagnostics in the whole template.
 
+### JSDoc `@extends` in `.gjs` files
+
+TypeScript 7 ignores `/** @extends {Component<Signature>} */` when the class extends a call
+expression such as `Component.extend(Evented)`
+([microsoft/TypeScript#64058](https://github.com/microsoft/TypeScript/issues/64058)). The mapper
+wraps such a heritage in a JSDoc type cast in the transformed text, so the signature applies. The
+cast drops the static side of the heritage on the subclass. The workaround goes away once the fix
+ships.
+
 ### Declaration files
 
 A sibling declaration file wins over transforming the module, matching Glint: `counter.gjs` is

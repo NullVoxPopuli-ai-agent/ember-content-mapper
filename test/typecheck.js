@@ -59,6 +59,7 @@ for (const project of [
   'parse-error',
   'invalid-options',
   'directives',
+  'jsdoc-extends',
   'upstream-differences',
 ]) {
   test(`diagnostics-tests/${project} reports mapped diagnostics`, () => {

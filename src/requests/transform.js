@@ -10,6 +10,7 @@ import { rewriteModuleStandalone } from '@glint/ember-tsc/transform/standalone';
 
 import { SpanMapKind } from '../constants.js';
 import { buildDiagnosticDirectives } from '../util/directives.js';
+import { applyInsertions, castCallHeritages } from '../util/heritage.js';
 import { buildMappings } from '../util/mappings.js';
 import { projects } from '../util/projects.js';
 import { prependReferences } from '../util/references.js';
@@ -103,7 +104,7 @@ export function transform(params) {
       passthrough.mappings = [[0, content.length, 0, content.length, SpanMapKind.Verbatim]];
     }
 
-    return prependReferences(passthrough, project.referencePrefix);
+    return prependReferences(withHeritageCasts(passthrough, fileName), project.referencePrefix);
   }
 
   if (transformedModule.errors.some((error) => error.isContentTagError)) {
@@ -166,5 +167,24 @@ export function transform(params) {
     result.diagnostics = diagnostics;
   }
 
-  return prependReferences(result, project.referencePrefix);
+  return prependReferences(withHeritageCasts(result, fileName), project.referencePrefix);
+}
+
+/**
+ * Work around microsoft/TypeScript#64058 for JavaScript output. See
+ * `castCallHeritages`.
+ *
+ * @param {TransformResult} result
+ *   The transform result, mutated in place.
+ * @param {string} fileName
+ *   The original file name.
+ * @returns {TransformResult}
+ *   The same result.
+ */
+function withHeritageCasts(result, fileName) {
+  if (result.extension !== '.js') {
+    return result;
+  }
+
+  return applyInsertions(result, castCallHeritages(result.text, fileName));
 }

@@ -82,11 +82,12 @@ a limitation of `@glint/template`'s types:
 
 ### JSDoc `@extends` over an expression heritage
 
-`jsdoc-extends-expression-heritage.gts` imports `classic-mixin.gjs`, a classic component with
-`/** @extends {Component<Sig>} */` over `Component.extend(Evented)`. TypeScript 7 ignores the
-tag when the heritage is a call expression, so the component has no signature and every argument
-reports `TS2554: Expected 0 arguments, but got 1`. TypeScript 5.9 honors it. This reproduces in
-plain JavaScript with no Glint involved, so it is a typescript-go difference.
+TypeScript 7 ignores a JSDoc `@extends` tag when the heritage is a call expression such as
+`Component.extend(Evented)` ([microsoft/TypeScript#64058](https://github.com/microsoft/TypeScript/issues/64058)).
+TypeScript 5.9 honors it. The mapper works around this in `.gjs` output: it wraps such a
+heritage in a JSDoc type cast to `new (...args: any[]) => <the tag's type>`, which both compilers
+honor. [`test/diagnostics-tests/jsdoc-extends/`](../diagnostics-tests/jsdoc-extends) checks that
+the signature is enforced. The cast drops the static side of the heritage on the subclass.
 
 ### Consecutive directives
 
