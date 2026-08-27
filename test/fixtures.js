@@ -1,5 +1,5 @@
 /**
- * @import { TransformResult } from '../lib/protocol.js'
+ * @import { TransformResult } from '../src/protocol.js'
  */
 
 import assert from 'node:assert/strict';
@@ -8,9 +8,9 @@ import { dirname, join } from 'node:path';
 
 import { assertEqual, testFixturesDirectory } from 'snapshot-fixtures';
 
-import { closeProject } from '../lib/requests/close-project.js';
-import { openProject } from '../lib/requests/open-project.js';
-import { transform } from '../lib/requests/transform.js';
+import { closeProject } from '../src/requests/close-project.js';
+import { openProject } from '../src/requests/open-project.js';
+import { transform } from '../src/requests/transform.js';
 import pkg from '../package.json' with { type: 'json' };
 
 const directory = new URL('fixtures/', import.meta.url);

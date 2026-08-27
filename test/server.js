@@ -9,7 +9,7 @@ import {
   StreamMessageWriter,
 } from 'vscode-jsonrpc/node';
 
-const serverPath = fileURLToPath(new URL('../lib/server.js', import.meta.url));
+const serverPath = fileURLToPath(new URL('../src/server.js', import.meta.url));
 
 // Every transformed module starts with the type references its output needs,
 // so that projects do not have to list them in `compilerOptions.types`. Both

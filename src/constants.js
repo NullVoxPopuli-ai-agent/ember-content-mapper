@@ -4,7 +4,7 @@
 // `SpanMapFeature`, and `DiagnosticDirectivePolicy` enums; revised by
 // https://github.com/microsoft/TypeScript/pull/63936). TypeScript owns these
 // values; they must match what the compiler sends and expects.
-// See lib/protocol.ts for the full protocol types.
+// See src/protocol.ts for the full protocol types.
 
 export const SpanMapKind = /** @type {const} */ ({
   Verbatim: 0,
