@@ -1,3 +1,5 @@
+allowBuilds:
+  esbuild: set this to true or false
 minimumReleaseAgeExclude:
   - '@typescript/typescript-darwin-arm64@7.1.0-dev.20260821.1'
   - '@typescript/typescript-darwin-x64@7.1.0-dev.20260821.1'
