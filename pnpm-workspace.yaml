@@ -14,4 +14,4 @@ minimumReleaseAgeExclude:
 packages:
   - '.'
   - examples/*
-  - test-packages/*
+  - test/test-packages/*

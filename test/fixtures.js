@@ -13,7 +13,7 @@ import { openProject } from '../lib/requests/open-project.js';
 import { transform } from '../lib/requests/transform.js';
 import pkg from '../package.json' with { type: 'json' };
 
-const directory = new URL('../fixtures/', import.meta.url);
+const directory = new URL('fixtures/', import.meta.url);
 
 const policyNames = /** @type {const} */ (['ignore', 'expect']);
 const kindNames = /** @type {const} */ (['verbatim', 'atom', 'alias']);

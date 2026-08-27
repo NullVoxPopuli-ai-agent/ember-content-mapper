@@ -1,5 +1,5 @@
 {
-  "name": "ts-gts-7-1-app",
+  "name": "ts-special-forms-pre-7-1-app",
   "version": "0.0.0",
   "private": true,
   "license": "MIT",
@@ -13,11 +13,10 @@
     "@glint/type-test": "^2.0.1",
     "@tsconfig/ember": "^3.0.9",
     "ember-content-mapper": "workspace:*",
-    "ember-source": "~7.1.0-beta.1",
-    "expect-type": "^1.2.1",
+    "ember-source": "^6.2.0",
     "typescript": "7.1.0-dev.20260821.1"
   },
   "volta": {
-    "extends": "../../package.json"
+    "extends": "../../../package.json"
   }
 }
