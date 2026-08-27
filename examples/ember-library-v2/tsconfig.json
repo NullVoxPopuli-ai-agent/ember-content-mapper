@@ -1,0 +1,33 @@
+/**
+ * One tsconfig for both jobs, using TypeScript 7 and the content mapper:
+ *
+ * - `tsc --runExternalCode` (run by rollup) emits the declarations for
+ *   publishing into `declarations/`.
+ * - `tsc --noEmit --runExternalCode` (via `lint:types`) type-checks.
+ */
+{
+  "extends": "@ember/library-tsconfig",
+  "include": ["./src/**/*"],
+  "compilerOptions": {
+    "allowJs": true,
+    "declarationDir": "declarations",
+
+    /**
+      https://www.typescriptlang.org/tsconfig#rootDir
+      "Default: The longest common path of all non-declaration input files."
+
+      Because we want our declarations' structure to match our rollup output,
+      we need this "rootDir" to match the "srcDir" in the rollup.config.mjs.
+
+      This way, we can have simpler `package.json#exports` that matches
+      imports to files on disk
+    */
+    "rootDir": "./src"
+  },
+  "contentMappers": [
+    {
+      "package": "ember-content-mapper",
+      "extensions": [".gts", ".gjs"]
+    }
+  ]
+}

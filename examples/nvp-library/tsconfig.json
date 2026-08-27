@@ -1,0 +1,15 @@
+{
+  "extends": "@ember/library-tsconfig",
+  "include": ["src"],
+  "compilerOptions": {
+    "rootDir": "./src",
+    "lib": ["esnext", "dom", "dom.iterable"],
+    "isolatedDeclarations": true
+  },
+  "contentMappers": [
+    {
+      "package": "ember-content-mapper",
+      "extensions": [".gts", ".gjs"]
+    }
+  ]
+}

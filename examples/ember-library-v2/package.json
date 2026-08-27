@@ -1,0 +1,73 @@
+{
+  "name": "ember-library-v2",
+  "version": "0.0.0",
+  "description": "The default blueprint for Embroider v2 addons.",
+  "keywords": [
+    "ember-addon"
+  ],
+  "repository": "",
+  "license": "MIT",
+  "author": "",
+  "imports": {
+    "#src/*": "./src/*"
+  },
+  "exports": {
+    ".": {
+      "types": "./declarations/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./addon-main.js": "./addon-main.cjs",
+    "./*.css": "./dist/*.css",
+    "./*": {
+      "types": "./declarations/*.d.ts",
+      "default": "./dist/*.js"
+    }
+  },
+  "files": [
+    "addon-main.cjs",
+    "declarations",
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "rollup --config && tsc --runExternalCode",
+    "format": "prettier . --cache --write",
+    "lint:types": "tsc --noEmit --runExternalCode",
+    "prepack": "pnpm build"
+  },
+  "dependencies": {
+    "@embroider/addon-shim": "^1.8.9",
+    "decorator-transforms": "^2.2.2"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.25.2",
+    "@babel/plugin-transform-typescript": "^7.25.2",
+    "@babel/runtime": "^7.25.6",
+    "@ember/library-tsconfig": "^2.0.0",
+    "@embroider/addon-dev": "^8.1.0",
+    "@glimmer/component": "^2.0.0",
+    "@glint/ember-tsc": "^1.0.3",
+    "@glint/template": "^1.6.1",
+    "@rollup/plugin-babel": "^7.1.0",
+    "babel-plugin-ember-template-compilation": "^4.0.0",
+    "ember-content-mapper": "link:../..",
+    "ember-source": "^7.2.0",
+    "prettier": "^3.4.2",
+    "prettier-plugin-ember-template-tag": "^2.0.4",
+    "rollup": "^4.22.5",
+    "typescript": "7.1.0-dev.20260821.1"
+  },
+  "ember": {
+    "edition": "octane"
+  },
+  "ember-addon": {
+    "version": 2,
+    "type": "addon",
+    "main": "addon-main.cjs",
+    "app-js": {
+      "./components/avatar.js": "./dist/_app_/components/avatar.js",
+      "./components/counter.js": "./dist/_app_/components/counter.js",
+      "./components/greeting.js": "./dist/_app_/components/greeting.js"
+    }
+  }
+}
