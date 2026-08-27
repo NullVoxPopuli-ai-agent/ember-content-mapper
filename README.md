@@ -7,7 +7,27 @@ This package is a [TypeScript content mapper](https://github.com/microsoft/types
 ## Requirements
 
 - TypeScript 7.1 nightly or newer (`typescript@next`).
+- Node 22.21.1 or newer, or Node 24.10.0 or newer. See [Node](#node).
 - imports must specify the file extensions
+
+### Node
+
+The mapper process runs on Node 22 and 24. The constraint comes from the `tsc` launcher: the
+`typescript` package's `bin/tsc` replaces itself with the native compiler through
+`process.execve`, and on Node 22.15.0 to 22.20.0 and 24.0.0 to 24.9.x `process.execve` starts
+the compiler with an empty environment
+([nodejs/node#60029](https://github.com/nodejs/node/pull/60029)). Without `PATH`, the compiler
+cannot find `node` to start the mapper, and every mapped file reports:
+
+```
+error TS100026: The content mapper 'ember-content-mapper' failed 5 times and will not be used.
+<file>(1,1): error TS100025: The content mapper 'ember-content-mapper' failed to transform this file.
+  The content mapper process failed while handling the project request.
+```
+
+The mapper never starts, so it cannot report a clearer error. The `engines` field in
+`package.json` makes package managers warn at install time. On an affected Node, run the native
+binary directly, for example `node_modules/@typescript/typescript-linux-x64/lib/tsc`.
 
 ## Install
 
