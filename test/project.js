@@ -1,10 +1,10 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { closeProject } from '../lib/requests/close-project.js';
-import { openProject } from '../lib/requests/open-project.js';
-import { projects } from '../lib/util/projects.js';
-import { buildReferencePrefix } from '../lib/util/references.js';
+import { closeProject } from '../src/requests/close-project.js';
+import { openProject } from '../src/requests/open-project.js';
+import { projects } from '../src/util/projects.js';
+import { buildReferencePrefix } from '../src/util/references.js';
 import pkg from '../package.json' with { type: 'json' };
 
 test('open and close project', () => {

@@ -12,6 +12,6 @@
     "target": "es2023",
     "types": ["node"]
   },
-  "include": ["lib", "test"],
+  "include": ["src", "test"],
   "exclude": ["test/diagnostics-tests", "test/fixtures", "test/test-packages"]
 }

@@ -7,7 +7,7 @@
   "author": "NullVoxPopuli",
   "type": "module",
   "files": [
-    "lib"
+    "src"
   ],
   "scripts": {
     "format": "oxfmt",
@@ -44,7 +44,7 @@
     "contentMapper": {
       "exec": [
         "node",
-        "lib/server.js"
+        "src/server.js"
       ],
       "compilerOptions": [],
       "dynamicConfig": true
