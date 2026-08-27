@@ -23,7 +23,7 @@
     "build": "tsdown",
     "prepack": "tsdown",
     "start": "tsdown --watch",
-    "lint:types": "ember-tsc --noEmit"
+    "lint:types": "node ./node_modules/typescript-7/bin/tsc --noEmit --runExternalCode"
   },
   "dependencies": {
     "decorator-transforms": "2.4.0"
@@ -36,12 +36,13 @@
     "@ember/library-tsconfig": "2.0.0",
     "@glimmer/component": "2.1.1",
     "@nullvoxpopuli/ember-rolldown": "2.7.0",
+    "ember-content-mapper": "workspace:*",
     "ember-source": "7.2.0",
     "tsdown": "0.22.14",
     "typescript": "6.0.3",
+    "typescript-7": "npm:typescript@7.1.0-dev.20260821.1",
     "@glint/ember-tsc": "1.11.0",
-    "@glint/template": "1.8.0",
-    "@glint/tsserver-plugin": "2.7.3"
+    "@glint/template": "1.8.0"
   },
   "engines": {
     "node": ">= 24"

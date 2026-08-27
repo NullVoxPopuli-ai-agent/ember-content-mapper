@@ -1,8 +1,9 @@
-# minimal-library
+# nvp-library
 
 An Ember v2 library (addon) built with
 [`@nullvoxpopuli/ember-rolldown`](https://github.com/NullVoxPopuli/ember.nvp/tree/main/packages/rolldown)
-and [tsdown](https://tsdown.dev/).
+and [tsdown](https://tsdown.dev/), type-checked with TypeScript 7 and
+[ember-content-mapper](../../README.md).
 
 ## Development
 
@@ -21,6 +22,16 @@ Rebuild on change while developing:
 ```bash
 pnpm start
 ```
+
+Type-check `.gts` through the content mapper:
+
+```bash
+pnpm lint:types
+```
+
+The build tooling (tsdown and `@nullvoxpopuli/ember-rolldown`) needs classic TypeScript's JS
+API, which the 7.1 nightly no longer ships. So `typescript` stays on 6.x for the build, the
+nightly is aliased as `typescript-7`, and `lint:types` invokes its `tsc` directly.
 
 ## Structure
 

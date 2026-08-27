@@ -1,7 +1,9 @@
-# Example apps
+# Examples
 
-Two Ember apps that type-check with TypeScript 7 and this mapper. Open them in your editor to
-debug the mapper against real app code.
+Two Ember apps and two Ember libraries that type-check with TypeScript 7 and this mapper. Open
+them in your editor to debug the mapper against real code.
+
+## Apps
 
 - `nvp-app`: from `pnpm dlx ember.nvp --type app --layers typescript --layers qunit --layers prettier`
 - `cli-app`: from `pnpm dlx ember-cli@latest new cli-app --typescript`
@@ -20,12 +22,37 @@ component (`greeting.gts`), a `.gjs` component with a JSDoc signature (`avatar.g
 helper functions, a `.ts` file that imports `.gts` and `.gjs` modules (`components/index.ts`), the
 Ember 7.1 keywords, and a rendering test in `.gts`.
 
+## Libraries
+
+Both libraries focus on build inputs and outputs: `src/` holds `.gts`, `.gjs`, and `.ts` modules,
+and the build emits browser-ready JS plus type declarations. Each has a class component with a
+signature and blocks (`counter.gts`), a template-only component (`greeting.gts`), helper
+functions, and an `index.ts` that imports the `.gts` modules.
+
+- `ember-library-v2`: from the Embroider v2 addon blueprint. Rollup compiles `src/` to `dist/`
+  and `tsc --runExternalCode` emits `declarations/` through the mapper. A `.gts` module emits
+  `counter.d.gts.ts`, and the `.gts`/`.gjs` specifiers in the other declaration files stay as
+  written; TypeScript 7 consumers resolve them through the same mapper. `addon.declarations()`
+  is not used: it strips `.gts` extensions from the emitted declarations (an `ember-tsc`-era
+  workaround), which would break that resolution. Also has a `.gjs` component (`avatar.gjs`) and
+  a filled-in `template-registry.ts`.
+- `nvp-library`: from the `ember.nvp` library blueprint, built with tsdown and
+  `@nullvoxpopuli/ember-rolldown`, which bundle `dist/index.js` and emit a bundled
+  `dist/index.d.ts` via isolated declarations. The build tooling needs classic TypeScript's JS
+  API, which the 7.1 nightly no longer ships, so `typescript` stays on 6.x and the nightly is
+  aliased as `typescript-7`; `lint:types` runs `node ./node_modules/typescript-7/bin/tsc
+  --noEmit --runExternalCode`.
+
 ## CLI
 
 ```sh
 pnpm install
 pnpm --filter nvp-app lint:types
 pnpm --filter cli-app lint:types
+pnpm --filter nvp-library lint:types
+pnpm --filter ember-library-v2 lint:types
+pnpm --filter nvp-library build
+pnpm --filter ember-library-v2 build
 ```
 
 Add a type error inside a `<template>` in `app/templates/application.gts`. The error points at

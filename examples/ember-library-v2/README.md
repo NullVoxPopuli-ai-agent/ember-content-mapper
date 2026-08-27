@@ -1,35 +1,38 @@
 # ember-library-v2
 
-[Short description of the addon.]
+An Embroider v2 addon (library), from the default blueprint, that builds and type-checks with
+TypeScript 7 and [ember-content-mapper](../../README.md). The example focuses on build inputs
+and outputs: `src/` holds `.gts`, `.gjs`, and `.ts` modules, and the build emits browser-ready
+JS plus type declarations.
 
-## Compatibility
+## Build
 
-- Ember.js v5.8 or above
-- Embroider or ember-auto-import v2
-
-## Installation
-
-```
-ember install ember-library-v2
+```sh
+pnpm build
 ```
 
-## Usage
+- rollup compiles `src/` to `dist/`.
+- `tsc --runExternalCode` emits declarations into `declarations/` through the content mapper.
+  A `.gts` module emits `counter.d.gts.ts`, and the `.gts`/`.gjs` import specifiers in the
+  other declaration files stay as written -- TypeScript 7 consumers resolve them through the
+  same mapper (`./components/counter.gts` -> `counter.d.gts.ts`).
 
-[Longer description of how to use the addon in apps.]
+`addon.declarations()` is not used in `rollup.config.mjs`: it strips `.gts` extensions from
+import specifiers in the emitted declarations (a workaround for the `ember-tsc` pipeline, see
+[typed-ember/glint#628](https://github.com/typed-ember/glint/issues/628)), which would make
+them unresolvable here.
 
-> TODO: Document the package's public API.
->
-> For each public api (including components, helpers, modifiers, and other apis) include:
->
-> - The import path for a consumer (e.g. `import MyAddonsComponent from 'my-addon/components/my-addons-component'`)
-> - What it does
-> - Parameters/options
-> - Return value
-> - Example usage
+Note: `package.json#exports` maps `./*` types to `./declarations/*.d.ts`, which the `.gts` and
+`.gjs` modules do not emit. Import components from the package root (`index.ts` re-exports
+them); the per-module subpaths still work at runtime.
 
-## Contributing
+## Type checking
 
-See the [Contributing](CONTRIBUTING.md) guide for details.
+```sh
+pnpm lint:types
+```
+
+Runs `tsc --noEmit --runExternalCode` with the `contentMappers` entry in `tsconfig.json`.
 
 ## License
 

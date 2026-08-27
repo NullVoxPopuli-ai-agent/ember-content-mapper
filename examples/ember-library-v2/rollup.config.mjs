@@ -1,16 +1,11 @@
 import { babel } from '@rollup/plugin-babel';
 import { Addon } from '@embroider/addon-dev/rollup';
-import { fileURLToPath } from 'node:url';
-import { resolve, dirname } from 'node:path';
 
 const addon = new Addon({
   srcDir: 'src',
   destDir: 'dist',
 });
 
-const rootDirectory = dirname(fileURLToPath(import.meta.url));
-const babelConfig = resolve(rootDirectory, './babel.publish.config.cjs');
-const tsConfig = resolve(rootDirectory, './tsconfig.publish.json');
 
 export default {
   // This provides defaults that work well alongside `publicEntrypoints` below.
@@ -51,7 +46,6 @@ export default {
     babel({
       extensions: ['.js', '.gjs', '.ts', '.gts'],
       babelHelpers: 'bundled',
-      configFile: babelConfig,
     }),
 
     // Ensure that standalone .hbs files are properly integrated as Javascript.
@@ -60,11 +54,13 @@ export default {
     // Ensure that .gjs files are properly integrated as Javascript
     addon.gjs(),
 
-    // Emit .d.ts declaration files
-    addon.declarations(
-      'declarations',
-      `pnpm ember-tsc --declaration --project ${tsConfig}`,
-    ),
+    // Declarations are emitted by TypeScript 7 + the content mapper in the
+    // build script (`tsc --runExternalCode`), not by addon.declarations():
+    // that plugin strips .gts extensions from import specifiers in the
+    // emitted .d.ts files (a workaround for the ember-tsc pipeline, see
+    // https://github.com/typed-ember/glint/issues/628), which would break
+    // them here -- consumers resolve './counter.gts' to 'counter.d.gts.ts'
+    // through the same content mapper.
 
     // addons are allowed to contain imports of .css files, which we want rollup
     // to leave alone and keep in the published output.

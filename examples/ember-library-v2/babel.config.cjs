@@ -1,20 +1,8 @@
 /**
- * This babel.config is not used for publishing.
- * It's only for the local editing experience
- * (and linting)
+ * This babel.config is only used for publishing.
+ *
+ * For local dev experience, see the babel.config
  */
-const { buildMacros } = require('@embroider/macros/babel');
-
-const {
-  babelCompatSupport,
-  templateCompatSupport,
-} = require('@embroider/compat/babel');
-
-const macros = buildMacros();
-
-// For scenario testing
-const isCompat = Boolean(process.env.ENABLE_COMPAT_BUILD);
-
 module.exports = {
   plugins: [
     [
@@ -28,20 +16,18 @@ module.exports = {
     [
       'babel-plugin-ember-template-compilation',
       {
-        transforms: [
-          ...(isCompat ? templateCompatSupport() : macros.templateMacros),
-        ],
+        targetFormat: 'hbs',
+        transforms: [],
       },
     ],
     [
       'module:decorator-transforms',
       {
         runtime: {
-          import: require.resolve('decorator-transforms/runtime-esm'),
+          import: 'decorator-transforms/runtime-esm',
         },
       },
     ],
-    ...(isCompat ? babelCompatSupport() : macros.babelMacros),
   ],
 
   generatorOpts: {
