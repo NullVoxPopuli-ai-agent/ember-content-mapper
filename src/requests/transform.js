@@ -3,6 +3,8 @@
  * @import { TransformError } from '@glint/ember-tsc/transform/template/transformed-module'
  */
 
+import { existsSync, readFileSync } from 'node:fs';
+
 import { rewriteModuleStandalone } from '@glint/ember-tsc/transform/standalone';
 
 import { SpanMapKind } from '../constants.js';
@@ -26,6 +28,36 @@ function toMapperDiagnostic(error) {
 }
 
 /**
+ * A sibling declaration file wins over transforming the module, matching how
+ * Glint treated hand-written declarations next to untyped `.gjs`/`.gts`
+ * files. Both TypeScript 7's arbitrary-extension convention (`x.d.gjs.ts`)
+ * and Glint's (`x.gjs.d.ts`) are honored.
+ *
+ * The declaration is parsed as a `.ts` module (the protocol has no `.d.ts`
+ * extension), so anything unbodied or uninitialized in it must use ambient
+ * (`declare`) syntax.
+ *
+ * @param {string} fileName
+ * @returns {string | undefined}
+ *   The path of the sibling declaration, if one exists.
+ */
+function siblingDeclaration(fileName) {
+  const match = /^(.*)\.(gts|gjs)$/.exec(fileName);
+  if (!match) {
+    return undefined;
+  }
+
+  const [, base, extension] = match;
+  for (const candidate of [`${base}.d.${extension}.ts`, `${base}.${extension}.d.ts`]) {
+    if (existsSync(candidate)) {
+      return candidate;
+    }
+  }
+
+  return undefined;
+}
+
+/**
  * @param {TransformParams} params
  * @returns {TransformResult}
  *   The result for the `transform` request.
@@ -37,6 +69,11 @@ export function transform(params) {
   }
 
   const { content, fileName } = params;
+
+  const declaration = siblingDeclaration(fileName);
+  if (declaration) {
+    return { text: readFileSync(declaration, 'utf8'), extension: '.ts' };
+  }
   /** @type {TransformResult['extension']} */
   const extension = fileName.endsWith('.gjs') ? '.js' : '.ts';
 

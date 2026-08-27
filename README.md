@@ -65,6 +65,13 @@ Glint's directives work as before:
 - `{{! @glint-ignore }}` suppresses the diagnostics on the next line.
 - `{{! @glint-nocheck }}` suppresses the diagnostics in the whole template.
 
+### Declaration files
+
+A sibling declaration file wins over transforming the module, matching Glint: `counter.gjs` is
+typed from `counter.d.gjs.ts` (TypeScript 7's arbitrary-extension convention) or `counter.gjs.d.ts`
+(Glint's) when one exists. The declaration is parsed as a `.ts` module, so anything unbodied or
+uninitialized in it must use ambient (`declare`) syntax.
+
 ## Migrating from TS6
 
 On TypeScript 6, Glint 2 type-checks `.gts` and `.gjs` with its own compiler, `ember-tsc`, and
