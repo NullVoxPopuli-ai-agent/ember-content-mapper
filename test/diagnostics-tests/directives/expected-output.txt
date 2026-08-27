@@ -1,0 +1,7 @@
+diagnostics-tests/directives/src/consecutive.gts(4,3): error glint2578: Unused '@glint-expect-error' directive.
+diagnostics-tests/directives/src/consecutive.gts(5,3): error glint2578: Unused '@glint-expect-error' directive.
+diagnostics-tests/directives/src/empty-area.gts(3,3): error glint2578: Unused '@glint-expect-error' directive.
+diagnostics-tests/directives/src/empty-area.gts(5,3): error glint2578: Unused '@glint-expect-error' directive.
+diagnostics-tests/directives/src/in-element.gts(7,5): error glint2578: Unused '@glint-expect-error' directive.
+diagnostics-tests/directives/src/in-element.gts(11,5): error glint2578: Unused '@glint-expect-error' directive.
+diagnostics-tests/directives/src/in-element.gts(14,5): error glint2578: Unused '@glint-expect-error' directive.

@@ -1,0 +1,14 @@
+{
+  "extends": "@tsconfig/ember/tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "skipLibCheck": true
+  },
+  "contentMappers": [
+    {
+      "package": "ember-content-mapper",
+      "extensions": [".gts", ".gjs"]
+    }
+  ],
+  "include": ["src"]
+}

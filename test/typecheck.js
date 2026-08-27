@@ -54,7 +54,13 @@ for (const name of testPackages) {
   });
 }
 
-for (const project of ['semantic', 'parse-error', 'invalid-options']) {
+for (const project of [
+  'semantic',
+  'parse-error',
+  'invalid-options',
+  'directives',
+  'upstream-differences',
+]) {
   test(`diagnostics-tests/${project} reports mapped diagnostics`, () => {
     const expected = readFileSync(
       new URL(`diagnostics-tests/${project}/expected-output.txt`, import.meta.url),

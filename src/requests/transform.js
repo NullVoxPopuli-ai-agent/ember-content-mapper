@@ -1,6 +1,7 @@
 /**
  * @import { MapperDiagnostic, TransformParams, TransformResult } from '../protocol.js'
  * @import { TransformError } from '@glint/ember-tsc/transform/template/transformed-module'
+ * @import { Placeholder, Region } from '../util/mappings.js'
  */
 
 import { existsSync, readFileSync } from 'node:fs';
@@ -25,6 +26,18 @@ function toMapperDiagnostic(error) {
     start: error.location.start,
     length: error.location.end - error.location.start,
   };
+}
+
+/**
+ * @param {TransformError} error
+ *   A Glint transform error.
+ * @param {Region} region
+ *   A region in original offsets.
+ * @returns {boolean}
+ *   Whether the error starts inside the region.
+ */
+function inRegion(error, region) {
+  return error.location.start >= region.originalStart && error.location.start < region.originalEnd;
 }
 
 /**
@@ -108,51 +121,49 @@ export function transform(params) {
   /** @type {TransformResult} */
   const result = { text: transformedModule.transformedContents, extension, mappings };
 
-  const diagnosticDirectives = buildDiagnosticDirectives(analysis);
+  // Glint's directives also suppress transform errors (e.g. a special-form
+  // arity error under `{{! @glint-expect-error }}`), but TypeScript's
+  // diagnostic directives only apply to its own bind/check diagnostics, so
+  // mapper diagnostics inside directive areas are filtered here. When a
+  // transform error aborts a node's emission, no mapping nodes exist for the
+  // area, so regions derived from the mapping tree can't cover it. An
+  // expect-error directive's area of effect is the line after the comment,
+  // and each such directive emits a placeholder whose original range is the
+  // comment, so the area is recoverable from the placeholder.
+  const suppressedRegions = analysis.expectNodes.concat(analysis.ignoreNodes);
+  /** @type {Set<Placeholder>} */
+  const usedPlaceholders = new Set();
+  for (const placeholder of analysis.placeholders) {
+    const lineEnd = content.indexOf('\n', placeholder.originalEnd);
+    if (lineEnd === -1) {
+      continue;
+    }
+
+    const nextLineEnd = content.indexOf('\n', lineEnd + 1);
+    const area = {
+      originalStart: lineEnd + 1,
+      originalEnd: nextLineEnd === -1 ? content.length : nextLineEnd + 1,
+      virtualStart: placeholder.virtualStart,
+      virtualEnd: placeholder.virtualEnd,
+    };
+    suppressedRegions.push(area);
+
+    if (transformedModule.errors.some((error) => inRegion(error, area))) {
+      usedPlaceholders.add(placeholder);
+    }
+  }
+
+  const diagnosticDirectives = buildDiagnosticDirectives(analysis, usedPlaceholders);
   if (diagnosticDirectives) {
     result.diagnosticDirectives = diagnosticDirectives;
   }
 
-  if (transformedModule.errors.length > 0) {
-    // Glint's directives also suppress transform errors (e.g. a special-form
-    // arity error under `{{! @glint-expect-error }}`), but TypeScript's
-    // diagnostic directives only apply to its own bind/check diagnostics, so
-    // filter mapper diagnostics inside directive areas here. When a transform
-    // error aborts a node's emission, no mapping nodes exist for the area, so
-    // regions derived from the mapping tree can't cover it. An expect-error
-    // directive's area of effect is the line after the comment, and each such
-    // directive emits a placeholder whose original range is the comment, so
-    // the area is recoverable from the placeholder.
-    const suppressedRegions = analysis.expectNodes.concat(analysis.ignoreNodes);
-    for (const placeholder of analysis.placeholders) {
-      const lineEnd = content.indexOf('\n', placeholder.originalEnd);
-      if (lineEnd === -1) {
-        continue;
-      }
+  const diagnostics = transformedModule.errors
+    .filter((error) => !suppressedRegions.some((region) => inRegion(error, region)))
+    .map(toMapperDiagnostic);
 
-      const nextLineEnd = content.indexOf('\n', lineEnd + 1);
-      suppressedRegions.push({
-        originalStart: lineEnd + 1,
-        originalEnd: nextLineEnd === -1 ? content.length : nextLineEnd + 1,
-        virtualStart: placeholder.virtualStart,
-        virtualEnd: placeholder.virtualEnd,
-      });
-    }
-
-    const diagnostics = transformedModule.errors
-      .filter(
-        (error) =>
-          !suppressedRegions.some(
-            (region) =>
-              error.location.start >= region.originalStart &&
-              error.location.start < region.originalEnd,
-          ),
-      )
-      .map(toMapperDiagnostic);
-
-    if (diagnostics.length > 0) {
-      result.diagnostics = diagnostics;
-    }
+  if (diagnostics.length > 0) {
+    result.diagnostics = diagnostics;
   }
 
   return prependReferences(result, project.referencePrefix);
