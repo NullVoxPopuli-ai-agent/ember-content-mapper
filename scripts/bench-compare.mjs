@@ -117,10 +117,14 @@ try {
     console.error('📌  CPU pinning enabled (taskset -c 0)\n');
   }
 
+  // The patched mitata (patches/mitata@1.0.34.patch) reads these sampling
+  // floors from the environment. Its defaults (12 samples, 642ms of CPU time
+  // per benchmark) make the p50 of the slow benchmarks swing by double digits
+  // on shared CI runners. Values from the caller's environment win.
   const result = spawnSync(cmd, fullArgs, {
     stdio: 'inherit',
     cwd: ROOT,
-    env: { ...process.env },
+    env: { MITATA_MIN_SAMPLES: '30', MITATA_MIN_CPU_TIME_MS: '5000', ...process.env },
   });
 
   if (result.status !== 0) {

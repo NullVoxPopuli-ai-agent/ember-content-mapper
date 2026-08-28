@@ -4,6 +4,9 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+patchedDependencies:
+  mitata@1.0.34: c117a0cd0791eb0ae7176ee205837e9b81d8bd3d55c6193c4d95e12ddb1572df
+
 importers:
 
   .:
@@ -44,7 +47,7 @@ importers:
         version: 1.4.0
       mitata:
         specifier: ^1.0.34
-        version: 1.0.34
+        version: 1.0.34(patch_hash=c117a0cd0791eb0ae7176ee205837e9b81d8bd3d55c6193c4d95e12ddb1572df)
       oxfmt:
         specifier: ^0.65.0
         version: 0.65.0
@@ -11704,7 +11707,7 @@ snapshots:
       minipass: 3.3.6
       yallist: 4.0.0
 
-  mitata@1.0.34: {}
+  mitata@1.0.34(patch_hash=c117a0cd0791eb0ae7176ee205837e9b81d8bd3d55c6193c4d95e12ddb1572df): {}
 
   mkdirp@0.5.6:
     dependencies:
