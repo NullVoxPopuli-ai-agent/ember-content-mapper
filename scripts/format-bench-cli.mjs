@@ -37,14 +37,14 @@ const expW = Math.max(
   'Experiment (p50)'.length,
   ...rows.map((r) => formatTime(r.experiment).length),
 );
-const deltaW = Math.max(
-  'Δ'.length,
-  ...rows.map((r) => {
-    const sign = r.delta > 0 ? '+' : '';
+const deltaStr = (r) => {
+  const sign = r.delta > 0 ? '+' : '';
+  const noise = r.noise === undefined ? '' : ` ±${r.noise.toFixed(1)}%`;
 
-    return `${sign}${r.delta.toFixed(1)}%`.length;
-  }),
-);
+  return `${sign}${r.delta.toFixed(1)}%${noise}`;
+};
+
+const deltaW = Math.max('Δ'.length, ...rows.map((r) => deltaStr(r).length));
 
 // Print table
 const pad = (s, w, right) => (right ? s.padStart(w) : s.padEnd(w));
@@ -58,12 +58,10 @@ console.log(
 );
 
 for (const row of rows) {
-  const emoji = deltaEmoji(row.delta);
-  const sign = row.delta > 0 ? '+' : '';
-  const deltaStr = `${sign}${row.delta.toFixed(1)}%`;
+  const emoji = deltaEmoji(row.delta, row.noise);
 
   console.log(
-    `${emoji} ${pad(row.name, nameW)}   ${pad(formatTime(row.control), ctrlW, true)}   ${pad(formatTime(row.experiment), expW, true)}   ${pad(deltaStr, deltaW, true)}`,
+    `${emoji} ${pad(row.name, nameW)}   ${pad(formatTime(row.control), ctrlW, true)}   ${pad(formatTime(row.experiment), expW, true)}   ${pad(deltaStr(row), deltaW, true)}`,
   );
 }
 

@@ -1,75 +1,73 @@
 /**
  * Benchmark script using mitata.
  *
- * When run standalone (`node --expose-gc test/transform.bench.mjs`), it
- * benchmarks the local transform only. When `bench-compare.mjs` passes
- * `--control-dir <dir>`, it also loads the control (base-branch) transform
- * from that directory and wraps each size in a `summary()` so mitata shows a
- * side-by-side comparison with boxplots.
+ * Benchmarks the transform request of exactly one source tree per process.
+ * By default that is the current checkout; `--dir <path>` benchmarks another
+ * tree with the same fixtures and harness (bench-compare.mjs uses this for
+ * the base branch). The two sides of a comparison never share a process:
+ * two copies of the same code in one V8 heap get different code layout and
+ * optimization treatment, which skewed p50s by up to 16% on identical code.
  *
  * Usage:
- *   node --expose-gc test/transform.bench.mjs [--control-dir <path>]
+ *   node --expose-gc test/transform.bench.mjs [--dir <path>] [--label <name>]
+ *
+ * Options:
+ *   --dir <path>     Source tree to benchmark (default: the repo root)
+ *   --label <name>   Suffix for benchmark names, e.g. "control" produces
+ *                    "gts small (control)" (default: no suffix)
  */
 
 import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { join, resolve } from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import { bench, boxplot, do_not_optimize, run, summary } from 'mitata';
-
-import { openProject } from '../src/requests/open-project.js';
-import { transform } from '../src/requests/transform.js';
+import { bench, do_not_optimize, run } from 'mitata';
 
 // ---------------------------------------------------------------------------
 // CLI args
 // ---------------------------------------------------------------------------
 
 const args = process.argv.slice(2);
-const ctrlIdx = args.indexOf('--control-dir');
-const controlArg = ctrlIdx === -1 ? undefined : args[ctrlIdx + 1];
-const CONTROL_DIR = controlArg ? resolve(controlArg) : null;
-
-// ---------------------------------------------------------------------------
-// Set up experiment (current branch) and control (base branch) transforms
-// ---------------------------------------------------------------------------
 
 /**
- * @typedef {(fileName: string, content: string) => unknown} Transformer
+ * @param {string} flag
+ *   The flag to look up.
+ * @returns {string | undefined}
+ *   The value after the flag.
  */
+function argValue(flag) {
+  const index = args.indexOf(flag);
 
-/**
- * Open a bench project and bind a transform function to it. The two sides are
- * separate module instances, so each registers the handle in its own project
- * map.
- *
- * @param {{ openProject: typeof openProject, transform: typeof transform }} requests
- *   The request handlers of one side.
- * @param {string} handle
- *   The project handle to open.
- * @returns {Transformer}
- *   A transform bound to the opened project.
- */
-function makeTransformer(requests, handle) {
-  requests.openProject({ configFileName: '', compilerOptions: {}, projectHandle: handle });
-
-  return (fileName, content) => requests.transform({ content, fileName, projectHandle: handle });
+  return index === -1 ? undefined : args[index + 1];
 }
 
-const experimentTransform = makeTransformer({ openProject, transform }, 'bench:experiment');
+const dirArg = argValue('--dir');
+const TREE = dirArg ? resolve(dirArg) : fileURLToPath(new URL('..', import.meta.url));
+const LABEL = argValue('--label');
 
-/** @type {Transformer | null} */
-let controlTransform = null;
+// ---------------------------------------------------------------------------
+// Load the tree's request handlers and open a bench project
+// ---------------------------------------------------------------------------
 
-if (CONTROL_DIR) {
-  /** @type {{ openProject: typeof openProject }} */
-  const controlOpenProject = await import(resolve(CONTROL_DIR, 'src/requests/open-project.js'));
-  /** @type {{ transform: typeof transform }} */
-  const controlTransformModule = await import(resolve(CONTROL_DIR, 'src/requests/transform.js'));
+/** @type {{ openProject: typeof import('../src/requests/open-project.js').openProject }} */
+const { openProject } = await import(
+  pathToFileURL(join(TREE, 'src/requests/open-project.js')).href
+);
+/** @type {{ transform: typeof import('../src/requests/transform.js').transform }} */
+const { transform } = await import(pathToFileURL(join(TREE, 'src/requests/transform.js')).href);
 
-  controlTransform = makeTransformer(
-    { openProject: controlOpenProject.openProject, transform: controlTransformModule.transform },
-    'bench:control',
-  );
+openProject({ configFileName: '', compilerOptions: {}, projectHandle: 'bench' });
+
+/**
+ * @param {string} fileName
+ *   The original file name.
+ * @param {string} content
+ *   The file content.
+ * @returns {unknown}
+ *   The transform result.
+ */
+function benchTransform(fileName, content) {
+  return transform({ content, fileName, projectHandle: 'bench' });
 }
 
 // ---------------------------------------------------------------------------
@@ -91,70 +89,34 @@ function fixture(name) {
 const TYPES = /** @type {const} */ (['gts', 'gjs']);
 const SIZES = /** @type {const} */ (['small', 'medium', 'large']);
 
-const FIXTURES = TYPES.map((type) => ({
-  type,
-  sizes: SIZES.map((size) => ({ size, ...fixture(`${size}.${type}`) })),
-}));
+const FIXTURES = TYPES.flatMap((type) =>
+  SIZES.map((size) => ({ name: `${type} ${size}`, ...fixture(`${size}.${type}`) })),
+);
 
 // ---------------------------------------------------------------------------
-// JIT warm-up — transform every fixture on both sides so V8 compiles and
-// optimises the hot paths before any measurement begins.  Without this, the
-// first-to-run side pays the JIT compilation cost, creating order bias.
+// JIT warm-up — transform every fixture so V8 compiles and optimises the hot
+// paths before any measurement begins
 // ---------------------------------------------------------------------------
 
 const WARMUP_ROUNDS = 20;
 
-for (const { sizes } of FIXTURES) {
-  for (const { content, path } of sizes) {
-    for (let i = 0; i < WARMUP_ROUNDS; i++) {
-      do_not_optimize(experimentTransform(path, content));
-      if (controlTransform) do_not_optimize(controlTransform(path, content));
-    }
+for (const { content, path } of FIXTURES) {
+  for (let i = 0; i < WARMUP_ROUNDS; i++) {
+    do_not_optimize(benchTransform(path, content));
   }
 }
 
 globalThis.gc?.();
 
-// Alternate registration order: whichever side runs first in a summary group
-// gets a small advantage (warm instruction cache, more favourable
-// thermal/frequency state).  By flipping the order on every other group the
-// bias cancels out across the full run instead of always penalising the same
-// side.
-let groupIndex = 0;
+// ---------------------------------------------------------------------------
+// Register and run
+// ---------------------------------------------------------------------------
 
-for (const { type, sizes } of FIXTURES) {
-  for (const { size, content, path } of sizes) {
-    // Force a full GC before each benchmark group to reduce GC-triggered variance
-    globalThis.gc?.();
+for (const { name, content, path } of FIXTURES) {
+  const benchName = LABEL ? `${name} (${LABEL})` : name;
 
-    const boundControl = controlTransform;
-    if (boundControl) {
-      const controlFirst = groupIndex % 2 === 0;
-      groupIndex++;
-
-      boxplot(() => {
-        summary(() => {
-          if (controlFirst) {
-            bench(`${type} ${size} (control)`, () => do_not_optimize(boundControl(path, content)));
-            bench(`${type} ${size} (experiment)`, () =>
-              do_not_optimize(experimentTransform(path, content)));
-          } else {
-            bench(`${type} ${size} (experiment)`, () =>
-              do_not_optimize(experimentTransform(path, content)));
-            bench(`${type} ${size} (control)`, () => do_not_optimize(boundControl(path, content)));
-          }
-        });
-      });
-    } else {
-      // Standalone mode — just benchmark the local transform
-      bench(`${type} ${size}`, () => do_not_optimize(experimentTransform(path, content)));
-    }
-  }
+  bench(benchName, () => do_not_optimize(benchTransform(path, content)));
 }
-
-// ---------------------------------------------------------------------------
-// Run
-// ---------------------------------------------------------------------------
 
 const result = await run({ colors: false, throw: true });
 

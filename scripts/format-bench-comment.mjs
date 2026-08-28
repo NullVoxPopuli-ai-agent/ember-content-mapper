@@ -47,16 +47,17 @@ if (jsonPath) {
     const rows = parsePairs(readBenchJSON(jsonPath));
 
     if (rows.length > 0) {
-      const tableRows = rows.map(({ name, control, experiment, delta }) => {
-        const emoji = deltaEmoji(delta);
+      const tableRows = rows.map(({ name, control, experiment, delta, noise }) => {
+        const emoji = deltaEmoji(delta, noise);
         const sign = delta > 0 ? '+' : '';
-        return `| ${emoji} | ${name} | ${formatTime(control)} | ${formatTime(experiment)} | ${sign}${delta.toFixed(1)}% |`;
+        const noiseCell = noise === undefined ? '' : `±${noise.toFixed(1)}%`;
+        return `| ${emoji} | ${name} | ${formatTime(control)} | ${formatTime(experiment)} | ${sign}${delta.toFixed(1)}% | ${noiseCell} |`;
       });
 
       summarySection = [
         '',
-        '| | Benchmark | Control (p50) | Experiment (p50) | Δ |',
-        '|---|---|---:|---:|---:|',
+        '| | Benchmark | Control (p50) | Experiment (p50) | Δ | Noise |',
+        '|---|---|---:|---:|---:|---:|',
         ...tableRows,
         '',
         `> ${DELTA_LEGEND}`,

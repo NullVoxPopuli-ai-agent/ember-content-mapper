@@ -2,20 +2,24 @@
  * Benchmark comparison script using mitata.
  *
  * Copies the base branch's source to a temp directory, installs its
- * dependencies, then runs the mitata bench script with --control-dir so that
- * both control (base) and experiment (current) transforms are benchmarked in
- * the same process — giving mitata a fair, head-to-head comparison with
- * built-in summary tables and boxplots.
+ * dependencies, then runs test/transform.bench.mjs several times: one process
+ * per side per round, in mirrored order (control, experiment, experiment,
+ * control, …). Separate processes prevent the two sides from sharing a V8
+ * heap, which skewed p50s by up to 16% on identical code. The mirrored order
+ * cancels runner frequency drift. The per-round p50s are merged into one
+ * JSON result (median across rounds), with the round-to-round spread kept as
+ * the noise estimate.
  *
  * Usage:
- *   node scripts/bench-compare.mjs [--base <branch>]
+ *   node scripts/bench-compare.mjs [--base <branch>] [--rounds <n>]
  *
  * Options:
  *   --base <branch>   Branch to compare against (default: main)
+ *   --rounds <n>      Rounds per side (default: 3, or BENCH_ROUNDS)
  */
 
 import { execSync, spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, rmSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -24,8 +28,15 @@ import { join } from 'node:path';
 // ---------------------------------------------------------------------------
 
 const args = process.argv.slice(2);
-const baseIdx = args.indexOf('--base');
-const BASE_BRANCH = baseIdx !== -1 ? args[baseIdx + 1] : 'main';
+
+function argValue(flag) {
+  const index = args.indexOf(flag);
+
+  return index === -1 ? undefined : args[index + 1];
+}
+
+const BASE_BRANCH = argValue('--base') ?? 'main';
+const ROUNDS = Number(argValue('--rounds') ?? process.env.BENCH_ROUNDS ?? 3);
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -50,12 +61,21 @@ function resolveRef(branch) {
   throw new Error(`Could not resolve ref for branch "${branch}". Is it fetched?`);
 }
 
+function median(nums) {
+  const sorted = nums.slice().sort((a, b) => a - b);
+  const mid = sorted.length >> 1;
+
+  return sorted.length % 2 === 1 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+}
+
 // ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
 
 const ROOT = process.cwd();
-const CONTROL_DIR = join(tmpdir(), `bench-control-${BASE_BRANCH}-${Date.now()}`);
+const WORK_DIR = join(tmpdir(), `bench-compare-${Date.now()}`);
+const CONTROL_DIR = join(WORK_DIR, 'control');
+const RESULTS_DIR = join(WORK_DIR, 'results');
 
 console.error(`\n🔧  Setting up control (${BASE_BRANCH}) in ${CONTROL_DIR}\n`);
 
@@ -64,9 +84,9 @@ console.error(`   Resolved ${BASE_BRANCH} → ${BASE_REF.slice(0, 10)}\n`);
 
 // Clean up temp dir on exit
 function cleanup() {
-  if (existsSync(CONTROL_DIR)) {
+  if (existsSync(WORK_DIR)) {
     try {
-      rmSync(CONTROL_DIR, { recursive: true, force: true });
+      rmSync(WORK_DIR, { recursive: true, force: true });
     } catch {
       // best-effort cleanup
     }
@@ -79,6 +99,7 @@ process.on('SIGTERM', () => process.exit(143));
 try {
   // ── 1. Export base branch source to temp dir ─────────────────────────────
   mkdirSync(CONTROL_DIR, { recursive: true });
+  mkdirSync(RESULTS_DIR, { recursive: true });
 
   // Copy the full tree (use the resolved SHA for reliability). The pnpm
   // workspace lists examples/* and test/test-packages/*, so a frozen-lockfile
@@ -92,44 +113,103 @@ try {
     stdio: ['inherit', 'pipe', 'inherit'],
   });
 
-  // ── 3. Run mitata bench with --control-dir ───────────────────────────────
-  console.error(`\n🏎️  Running benchmarks (experiment vs control)…\n`);
-
+  // ── 3. Run one bench process per side per round, in mirrored order ───────
   const benchScript = join(ROOT, 'test/transform.bench.mjs');
-  const benchArgs = [
-    '--expose-gc',
-    '--max-old-space-size=4096',
-    benchScript,
-    '--control-dir',
-    CONTROL_DIR,
-  ];
 
   // CPU pinning on Linux to reduce cross-core migration variance
   const IS_LINUX = process.platform === 'linux';
   const HAS_TASKSET = IS_LINUX && spawnSync('which', ['taskset'], { stdio: 'pipe' }).status === 0;
+  if (HAS_TASKSET) console.error('📌  CPU pinning enabled (taskset -c 0)\n');
 
-  let cmd = 'node';
-  let fullArgs = benchArgs;
+  const SIDES = { control: CONTROL_DIR, experiment: ROOT };
+  const resultFiles = [];
 
-  if (HAS_TASKSET) {
-    cmd = 'taskset';
-    fullArgs = ['-c', '0', 'node', ...benchArgs];
-    console.error('📌  CPU pinning enabled (taskset -c 0)\n');
+  for (let round = 0; round < ROUNDS; round++) {
+    const order = round % 2 === 0 ? ['control', 'experiment'] : ['experiment', 'control'];
+
+    for (const side of order) {
+      console.error(`\n🏎️  Round ${round + 1}/${ROUNDS}: ${side}…\n`);
+      console.log(`\n━━━ round ${round + 1}/${ROUNDS}: ${side} ━━━\n`);
+
+      const jsonPath = join(RESULTS_DIR, `round-${round}-${side}.json`);
+      const benchArgs = [
+        '--expose-gc',
+        '--max-old-space-size=4096',
+        benchScript,
+        '--dir',
+        SIDES[side],
+        '--label',
+        side,
+      ];
+
+      const cmd = HAS_TASKSET ? 'taskset' : 'node';
+      const fullArgs = HAS_TASKSET ? ['-c', '0', 'node'].concat(benchArgs) : benchArgs;
+
+      // The patched mitata (patches/mitata@1.0.34.patch) reads these sampling
+      // floors from the environment. Its defaults (12 samples, 642ms of CPU
+      // time per benchmark) make the p50 of the slow benchmarks unstable.
+      // Values from the caller's environment win.
+      const result = spawnSync(cmd, fullArgs, {
+        stdio: 'inherit',
+        cwd: ROOT,
+        env: {
+          MITATA_MIN_SAMPLES: '30',
+          MITATA_MIN_CPU_TIME_MS: '3000',
+          ...process.env,
+          BENCH_JSON_OUTPUT: jsonPath,
+        },
+      });
+
+      if (result.status !== 0) {
+        console.error(`\n❌  Benchmark run failed (round ${round + 1}, ${side}).`);
+        process.exit(1);
+      }
+
+      resultFiles.push(jsonPath);
+    }
   }
 
-  // The patched mitata (patches/mitata@1.0.34.patch) reads these sampling
-  // floors from the environment. Its defaults (12 samples, 642ms of CPU time
-  // per benchmark) make the p50 of the slow benchmarks swing by double digits
-  // on shared CI runners. Values from the caller's environment win.
-  const result = spawnSync(cmd, fullArgs, {
-    stdio: 'inherit',
-    cwd: ROOT,
-    env: { MITATA_MIN_SAMPLES: '30', MITATA_MIN_CPU_TIME_MS: '5000', ...process.env },
-  });
+  // ── 4. Merge the per-round results (median of p50s across rounds) ────────
+  const byName = new Map();
+  let context;
 
-  if (result.status !== 0) {
-    console.error('\n❌  Benchmark run failed.');
-    process.exit(1);
+  for (const file of resultFiles) {
+    const json = JSON.parse(readFileSync(file, 'utf8'));
+    context ??= json.context;
+
+    for (const trial of json.benchmarks || []) {
+      for (const r of trial.runs || []) {
+        if (!r.stats) continue;
+        if (!byName.has(r.name)) byName.set(r.name, []);
+        byName.get(r.name).push(r.stats);
+      }
+    }
+  }
+
+  const benchmarks = [];
+  for (const [name, statsList] of byName) {
+    const p50s = statsList.map((s) => s.p50 ?? s.avg);
+
+    benchmarks.push({
+      alias: name,
+      runs: [
+        {
+          name,
+          stats: {
+            avg: median(statsList.map((s) => s.avg)),
+            p50: median(p50s),
+            min: median(statsList.map((s) => s.min)),
+            max: median(statsList.map((s) => s.max)),
+            roundP50s: p50s,
+          },
+        },
+      ],
+    });
+  }
+
+  const jsonOut = process.env.BENCH_JSON_OUTPUT;
+  if (jsonOut) {
+    writeFileSync(jsonOut, JSON.stringify({ context, rounds: ROUNDS, benchmarks }, null, 2));
   }
 
   console.error('\n✅  Benchmark comparison complete.\n');
