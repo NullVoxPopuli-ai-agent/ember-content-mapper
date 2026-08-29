@@ -10,9 +10,10 @@
     "src"
   ],
   "scripts": {
-    "bench": "node --expose-gc test/transform.bench.mjs",
+    "bench": "node --expose-gc test/mapper.bench.mjs",
     "bench:compare": "node scripts/bench-compare.mjs",
     "bench:summary": "./scripts/local-bench-summary.sh",
+    "bench:tsc": "node test/tsc.bench.mjs",
     "format": "oxfmt",
     "lint:format": "oxfmt --check",
     "lint:types": "tsc",

@@ -2,9 +2,9 @@
  * Benchmark comparison script using mitata.
  *
  * Copies the base branch's source to a temp directory, installs its
- * dependencies, then runs test/transform.bench.mjs several times: one process
- * per side per round, in mirrored order (control, experiment, experiment,
- * control, …). Separate processes prevent the two sides from sharing a V8
+ * dependencies, then runs the bench scripts (test/mapper.bench.mjs and
+ * test/tsc.bench.mjs) several times: one process per side per round, in
+ * mirrored order (control, experiment, experiment, control, …). Separate processes prevent the two sides from sharing a V8
  * heap, which skewed p50s by up to 16% on identical code. The mirrored order
  * cancels runner frequency drift. The per-round p50s are merged into one
  * JSON result (median across rounds), with the round-to-round spread kept as
@@ -21,7 +21,7 @@
 import { execSync, spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { basename, join } from 'node:path';
 
 // ---------------------------------------------------------------------------
 // CLI args
@@ -113,9 +113,7 @@ try {
     stdio: ['inherit', 'pipe', 'inherit'],
   });
 
-  // ── 3. Run one bench process per side per round, in mirrored order ───────
-  const benchScript = join(ROOT, 'test/transform.bench.mjs');
-
+  // ── 3. Run the bench processes per side per round, in mirrored order ─────
   // CPU pinning on Linux to reduce cross-core migration variance
   const IS_LINUX = process.platform === 'linux';
   const HAS_TASKSET = IS_LINUX && spawnSync('which', ['taskset'], { stdio: 'pipe' }).status === 0;
@@ -124,6 +122,53 @@ try {
   const SIDES = { control: CONTROL_DIR, experiment: ROOT };
   const resultFiles = [];
 
+  // The tsc bench is not pinned: typescript-7 is multithreaded, and pinning
+  // it to one core would measure a configuration nobody runs.
+  const BENCHES = [
+    { script: 'test/mapper.bench.mjs', nodeArgs: ['--expose-gc'], pin: true },
+    { script: 'test/tsc.bench.mjs', nodeArgs: [], pin: false },
+  ];
+
+  function runBench(benchSpec, side, round) {
+    const jsonPath = join(RESULTS_DIR, `round-${round}-${side}-${basename(benchSpec.script)}.json`);
+    const benchArgs = benchSpec.nodeArgs.concat([
+      '--max-old-space-size=4096',
+      join(ROOT, benchSpec.script),
+      '--dir',
+      SIDES[side],
+      '--label',
+      side,
+    ]);
+
+    const pin = benchSpec.pin && HAS_TASKSET;
+    const cmd = pin ? 'taskset' : 'node';
+    const fullArgs = pin ? ['-c', '0', 'node'].concat(benchArgs) : benchArgs;
+
+    // The patched mitata (patches/mitata@1.0.34.patch) reads these sampling
+    // floors from the environment. Its defaults (12 samples, 642ms of CPU
+    // time per benchmark) make the p50 of the slow benchmarks unstable.
+    // Values from the caller's environment win.
+    const result = spawnSync(cmd, fullArgs, {
+      stdio: 'inherit',
+      cwd: ROOT,
+      env: {
+        MITATA_MIN_SAMPLES: '30',
+        MITATA_MIN_CPU_TIME_MS: '3000',
+        ...process.env,
+        BENCH_JSON_OUTPUT: jsonPath,
+      },
+    });
+
+    if (result.status !== 0) {
+      console.error(
+        `\n❌  Benchmark run failed (round ${round + 1}, ${side}, ${benchSpec.script}).`,
+      );
+      process.exit(1);
+    }
+
+    resultFiles.push(jsonPath);
+  }
+
   for (let round = 0; round < ROUNDS; round++) {
     const order = round % 2 === 0 ? ['control', 'experiment'] : ['experiment', 'control'];
 
@@ -131,41 +176,9 @@ try {
       console.error(`\n🏎️  Round ${round + 1}/${ROUNDS}: ${side}…\n`);
       console.log(`\n━━━ round ${round + 1}/${ROUNDS}: ${side} ━━━\n`);
 
-      const jsonPath = join(RESULTS_DIR, `round-${round}-${side}.json`);
-      const benchArgs = [
-        '--expose-gc',
-        '--max-old-space-size=4096',
-        benchScript,
-        '--dir',
-        SIDES[side],
-        '--label',
-        side,
-      ];
-
-      const cmd = HAS_TASKSET ? 'taskset' : 'node';
-      const fullArgs = HAS_TASKSET ? ['-c', '0', 'node'].concat(benchArgs) : benchArgs;
-
-      // The patched mitata (patches/mitata@1.0.34.patch) reads these sampling
-      // floors from the environment. Its defaults (12 samples, 642ms of CPU
-      // time per benchmark) make the p50 of the slow benchmarks unstable.
-      // Values from the caller's environment win.
-      const result = spawnSync(cmd, fullArgs, {
-        stdio: 'inherit',
-        cwd: ROOT,
-        env: {
-          MITATA_MIN_SAMPLES: '30',
-          MITATA_MIN_CPU_TIME_MS: '3000',
-          ...process.env,
-          BENCH_JSON_OUTPUT: jsonPath,
-        },
-      });
-
-      if (result.status !== 0) {
-        console.error(`\n❌  Benchmark run failed (round ${round + 1}, ${side}).`);
-        process.exit(1);
+      for (const benchSpec of BENCHES) {
+        runBench(benchSpec, side, round);
       }
-
-      resultFiles.push(jsonPath);
     }
   }
 
