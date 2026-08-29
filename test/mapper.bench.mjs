@@ -1,12 +1,11 @@
 /**
- * Benchmark script using mitata. Three benchmarks, each processing the whole
+ * Benchmark script using mitata. Two benchmarks, each processing the whole
  * fixture set per iteration, so cross-file effects (inline-cache
  * polymorphism, GC pressure from mixed shapes) are part of the measurement:
  *
- *   glint rewrite   rewriteModuleStandalone only
- *   transform       the transform request (rewrite + mappings + directives)
- *   server          the same requests through src/server.js over jsonrpc,
- *                   8 in flight, the way TypeScript issues them
+ *   transform   the transform request (rewrite + mappings + directives)
+ *   server      the same requests through src/server.js over jsonrpc,
+ *               8 in flight, the way TypeScript issues them
  *
  * Each process measures exactly one source tree. By default that is the
  * current checkout; `--dir <path>` measures another tree with the same
@@ -26,7 +25,6 @@
 
 import { spawn } from 'node:child_process';
 import { readFileSync } from 'node:fs';
-import { createRequire } from 'node:module';
 import { join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
@@ -73,26 +71,14 @@ function withLabel(name) {
 // Load the tree's modules and open a bench project
 // ---------------------------------------------------------------------------
 
-const treeRequire = createRequire(join(TREE, 'noop.js'));
-
-/** @type {{ rewriteModuleStandalone: typeof import('@glint/ember-tsc/transform/standalone').rewriteModuleStandalone }} */
-const { rewriteModuleStandalone } = await import(
-  pathToFileURL(treeRequire.resolve('@glint/ember-tsc/transform/standalone')).href
-);
 /** @type {{ openProject: typeof import('../src/requests/open-project.js').openProject }} */
 const { openProject } = await import(
   pathToFileURL(join(TREE, 'src/requests/open-project.js')).href
 );
 /** @type {{ transform: typeof import('../src/requests/transform.js').transform }} */
 const { transform } = await import(pathToFileURL(join(TREE, 'src/requests/transform.js')).href);
-/** @type {{ projects: typeof import('../src/util/projects.js').projects }} */
-const { projects } = await import(pathToFileURL(join(TREE, 'src/util/projects.js')).href);
 
 openProject({ configFileName: '', compilerOptions: {}, projectHandle: 'bench' });
-
-const project = projects.get('bench');
-if (!project) throw new Error('openProject did not register the bench project');
-const { environment } = project;
 
 // ---------------------------------------------------------------------------
 // Fixture content
@@ -116,16 +102,8 @@ const SIZES = /** @type {const} */ (['small', 'medium', 'large']);
 const FIXTURES = TYPES.flatMap((type) => SIZES.map((size) => fixture(`${size}.${type}`)));
 
 // ---------------------------------------------------------------------------
-// The three workloads, each covering the whole fixture set
+// The two workloads, each covering the whole fixture set
 // ---------------------------------------------------------------------------
-
-function rewriteAll() {
-  for (const { content, path } of FIXTURES) {
-    do_not_optimize(
-      rewriteModuleStandalone({ script: { filename: path, contents: content } }, environment),
-    );
-  }
-}
 
 function transformAll() {
   for (const { content, path } of FIXTURES) {
@@ -183,7 +161,6 @@ async function serverAll() {
 const WARMUP_ROUNDS = 5;
 
 for (let i = 0; i < WARMUP_ROUNDS; i++) {
-  rewriteAll();
   transformAll();
   await serverAll();
 }
@@ -194,7 +171,6 @@ globalThis.gc?.();
 // Register and run
 // ---------------------------------------------------------------------------
 
-bench(withLabel('glint rewrite'), rewriteAll);
 bench(withLabel('transform'), transformAll);
 bench(withLabel('server 8-in-flight'), serverAll);
 
@@ -222,8 +198,6 @@ if (jsonPath) {
             min: r.stats.min,
             max: r.stats.max,
             p50: r.stats.p50,
-            p75: r.stats.p75,
-            p99: r.stats.p99,
             samples: r.stats.samples,
           }
         : undefined,

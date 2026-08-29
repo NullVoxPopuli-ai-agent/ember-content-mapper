@@ -3,12 +3,14 @@
  *
  * Copies the base branch's source to a temp directory, installs its
  * dependencies, then runs the bench scripts (test/mapper.bench.mjs and
- * test/tsc.bench.mjs) several times: one process per side per round, in
- * mirrored order (control, experiment, experiment, control, …). Separate processes prevent the two sides from sharing a V8
- * heap, which skewed p50s by up to 16% on identical code. The mirrored order
- * cancels runner frequency drift. The per-round p50s are merged into one
- * JSON result (median across rounds), with the round-to-round spread kept as
- * the noise estimate.
+ * test/tsc.bench.mjs) with one process per side per round. Separate
+ * processes prevent the two sides from sharing a V8 heap, which skewed p50s
+ * by up to 16% on identical code. With CPU pinning available, the two mapper
+ * processes of a round run simultaneously on separate cores, so machine
+ * drift hits both sides equally; the cores (or, without pinning, the run
+ * order) swap every round to cancel the remaining asymmetry. The per-round
+ * p50s are merged into one JSON result (median across rounds), with the
+ * round-to-round spread kept as the noise estimate.
  *
  * Usage:
  *   node scripts/bench-compare.mjs [--base <branch>] [--rounds <n>]
@@ -18,9 +20,9 @@
  *   --rounds <n>      Rounds per side (default: 3, or BENCH_ROUNDS)
  */
 
-import { execSync, spawnSync } from 'node:child_process';
+import { execSync, spawn, spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { availableParallelism, tmpdir } from 'node:os';
 import { basename, join } from 'node:path';
 
 // ---------------------------------------------------------------------------
@@ -113,23 +115,28 @@ try {
     stdio: ['inherit', 'pipe', 'inherit'],
   });
 
-  // ── 3. Run the bench processes per side per round, in mirrored order ─────
+  // ── 3. Run the bench processes per side per round ────────────────────────
   // CPU pinning on Linux to reduce cross-core migration variance
   const IS_LINUX = process.platform === 'linux';
   const HAS_TASKSET = IS_LINUX && spawnSync('which', ['taskset'], { stdio: 'pipe' }).status === 0;
-  if (HAS_TASKSET) console.error('📌  CPU pinning enabled (taskset -c 0)\n');
+  // With pinning and at least 4 logical CPUs, the two mapper processes run
+  // simultaneously on separate cores: the shared time window cancels machine
+  // drift, and the cores swap every round to cancel core asymmetry.
+  const PARALLEL_SIDES = HAS_TASKSET && availableParallelism() >= 4;
+  if (HAS_TASKSET) console.error('📌  CPU pinning enabled\n');
+  if (PARALLEL_SIDES) console.error('⚡  Mapper sides run in parallel on cores 0 and 2\n');
 
   const SIDES = { control: CONTROL_DIR, experiment: ROOT };
   const resultFiles = [];
 
-  // The tsc bench is not pinned: typescript-7 is multithreaded, and pinning
-  // it to one core would measure a configuration nobody runs.
-  const BENCHES = [
-    { script: 'test/mapper.bench.mjs', nodeArgs: ['--expose-gc'], pin: true },
-    { script: 'test/tsc.bench.mjs', nodeArgs: [], pin: false },
-  ];
+  const MAPPER = { script: 'test/mapper.bench.mjs', nodeArgs: ['--expose-gc'] };
+  const TSC = { script: 'test/tsc.bench.mjs', nodeArgs: [] };
 
-  function runBench(benchSpec, side, round) {
+  /**
+   * Start one bench process; resolves with its captured stdout, so parallel
+   * processes never interleave their output.
+   */
+  function startBench(benchSpec, side, round, core) {
     const jsonPath = join(RESULTS_DIR, `round-${round}-${side}-${basename(benchSpec.script)}.json`);
     const benchArgs = benchSpec.nodeArgs.concat([
       '--max-old-space-size=4096',
@@ -140,45 +147,82 @@ try {
       side,
     ]);
 
-    const pin = benchSpec.pin && HAS_TASKSET;
+    const pin = core !== undefined && HAS_TASKSET;
     const cmd = pin ? 'taskset' : 'node';
-    const fullArgs = pin ? ['-c', '0', 'node'].concat(benchArgs) : benchArgs;
+    const fullArgs = pin ? ['-c', String(core), 'node'].concat(benchArgs) : benchArgs;
 
     // The patched mitata (patches/mitata@1.0.34.patch) reads these sampling
     // floors from the environment. Its defaults (12 samples, 642ms of CPU
     // time per benchmark) make the p50 of the slow benchmarks unstable.
     // Values from the caller's environment win.
-    const result = spawnSync(cmd, fullArgs, {
-      stdio: 'inherit',
+    const child = spawn(cmd, fullArgs, {
       cwd: ROOT,
+      stdio: ['ignore', 'pipe', 'inherit'],
       env: {
-        MITATA_MIN_SAMPLES: '30',
+        MITATA_MIN_SAMPLES: '20',
         MITATA_MIN_CPU_TIME_MS: '3000',
         ...process.env,
         BENCH_JSON_OUTPUT: jsonPath,
       },
     });
 
-    if (result.status !== 0) {
-      console.error(
-        `\n❌  Benchmark run failed (round ${round + 1}, ${side}, ${benchSpec.script}).`,
-      );
-      process.exit(1);
-    }
+    const chunks = [];
+    child.stdout.on('data', (chunk) => chunks.push(chunk));
 
-    resultFiles.push(jsonPath);
+    return new Promise((resolveOutput, reject) => {
+      child.on('error', reject);
+      child.on('close', (code) => {
+        const output = Buffer.concat(chunks).toString();
+        if (code !== 0) {
+          process.stdout.write(output);
+          reject(
+            new Error(`Benchmark run failed (round ${round + 1}, ${side}, ${benchSpec.script}).`),
+          );
+          return;
+        }
+        resultFiles.push(jsonPath);
+        resolveOutput(output);
+      });
+    });
+  }
+
+  function printRun(round, title, output) {
+    console.log(`\n━━━ round ${round + 1}/${ROUNDS}: ${title} ━━━\n`);
+    process.stdout.write(output);
   }
 
   for (let round = 0; round < ROUNDS; round++) {
-    const order = round % 2 === 0 ? ['control', 'experiment'] : ['experiment', 'control'];
+    // Mirror per round: which core (parallel) or which slot in the run order
+    // (sequential) each side gets.
+    const mirrored = round % 2 === 1;
 
-    for (const side of order) {
-      console.error(`\n🏎️  Round ${round + 1}/${ROUNDS}: ${side}…\n`);
-      console.log(`\n━━━ round ${round + 1}/${ROUNDS}: ${side} ━━━\n`);
-
-      for (const benchSpec of BENCHES) {
-        runBench(benchSpec, side, round);
+    console.error(`\n🏎️  Round ${round + 1}/${ROUNDS}: mapper…\n`);
+    if (PARALLEL_SIDES) {
+      const cores = mirrored ? { control: 2, experiment: 0 } : { control: 0, experiment: 2 };
+      const [controlOut, experimentOut] = await Promise.all([
+        startBench(MAPPER, 'control', round, cores.control),
+        startBench(MAPPER, 'experiment', round, cores.experiment),
+      ]);
+      printRun(round, `mapper control (core ${cores.control})`, controlOut);
+      printRun(round, `mapper experiment (core ${cores.experiment})`, experimentOut);
+    } else {
+      const order = mirrored ? ['experiment', 'control'] : ['control', 'experiment'];
+      for (const side of order) {
+        printRun(
+          round,
+          `mapper ${side}`,
+          await startBench(MAPPER, side, round, HAS_TASKSET ? 0 : undefined),
+        );
       }
+    }
+
+    // tsc: typescript-7 is multithreaded, so pinning or overlapping it would
+    // measure a configuration nobody runs; the sides run sequentially in
+    // mirrored order.
+    const order = mirrored ? ['experiment', 'control'] : ['control', 'experiment'];
+    for (const side of order) {
+      console.error(`\n🏎️  Round ${round + 1}/${ROUNDS}: tsc ${side}…\n`);
+      printRun(round, `tsc ${side}`, await startBench(TSC, side, round, undefined));
     }
   }
 

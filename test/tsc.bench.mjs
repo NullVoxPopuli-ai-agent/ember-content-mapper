@@ -19,8 +19,8 @@
  *   --label <name>   Suffix for benchmark names (default: no suffix)
  *
  * Environment:
- *   BENCH_TSC_RUNS     Measured runs after one warm-up run (default: 4)
- *   BENCH_TSC_COPIES   Copies of each fixture in the project (default: 8)
+ *   BENCH_TSC_RUNS     Measured runs after one warm-up run (default: 3)
+ *   BENCH_TSC_COPIES   Copies of each fixture in the project (default: 6)
  *   BENCH_JSON_OUTPUT  Path for the JSON results
  */
 
@@ -61,8 +61,8 @@ function withLabel(name) {
   return LABEL ? `${name} (${LABEL})` : name;
 }
 
-const RUNS = Number(process.env['BENCH_TSC_RUNS'] ?? 4);
-const COPIES = Number(process.env['BENCH_TSC_COPIES'] ?? 8);
+const RUNS = Number(process.env['BENCH_TSC_RUNS'] ?? 3);
+const COPIES = Number(process.env['BENCH_TSC_COPIES'] ?? 6);
 
 // ---------------------------------------------------------------------------
 // Generate the project inside the measured tree, under node_modules so it is

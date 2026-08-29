@@ -3,6 +3,16 @@ name: Benchmark Comparison
 on:
   pull_request:
     types: [opened, synchronize, reopened]
+    # Only paths that can change what the benchmarks measure.
+    paths:
+      - "src/**"
+      - "test/bench/**"
+      - "test/*.bench.mjs"
+      - "scripts/**"
+      - "patches/**"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - ".github/workflows/bench-compare.yml"
   workflow_dispatch:
     inputs:
       experiment_ref:
